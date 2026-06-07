@@ -25,7 +25,7 @@ from core.background import async_enqueue_scoring
 
 # ── Database ─────────────────────────────────────────────────────────────────
 
-db = Database(str(config.DB_PATH), database_url=config.DATABASE_URL, trace_backend=config.TRACE_BACKEND)
+db = Database(str(config.DB_PATH), database_url=config.DATABASE_URL)
 
 # ── Redis (optional) ─────────────────────────────────────────────────────────
 

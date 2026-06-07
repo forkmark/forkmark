@@ -39,7 +39,6 @@ class SettingsBody(BaseModel):
 
 
 class SystemInfoBody(BaseModel):
-    trace_backend: Optional[str] = None
     background_workers: Optional[int] = None
     require_ui_auth: Optional[str] = None
 
@@ -97,20 +96,10 @@ def patch_settings(body: SettingsBody, _auth=Depends(ui_write_auth)):
     return {"ok": True}
 
 
-def _detect_duckdb_available() -> bool:
-    try:
-        import duckdb
-        return True
-    except ImportError:
-        return False
-
-
 @router.get("/system-info", tags=["settings"])
 def get_system_info(_auth=Depends(ui_read_auth)):
-    backend = config.TRACE_BACKEND.lower() if config.TRACE_BACKEND else "sqlite"
     return {
-        "trace_backend": backend,
-        "duckdb_available": _detect_duckdb_available(),
+        "storage": "postgresql" if config.DATABASE_URL else "sqlite",
         "database_url_set": bool(config.DATABASE_URL),
         "version": config.VERSION,
         "background_workers": config.BACKGROUND_WORKERS,
@@ -126,15 +115,6 @@ def get_system_info(_auth=Depends(ui_read_auth)):
 def patch_system_info(body: SystemInfoBody, _auth=Depends(ui_write_auth)):
     from config import save_env_setting
     restart_required = False
-
-    if body.trace_backend is not None:
-        val = body.trace_backend.lower().strip()
-        if val not in ("sqlite", "duckdb", ""):
-            raise HTTPException(400, f"Invalid trace_backend: {val!r}.")
-        if val == "duckdb" and not _detect_duckdb_available():
-            raise HTTPException(400, "duckdb package is not installed.")
-        save_env_setting("FM_TRACE_BACKEND", "" if val == "sqlite" else val)
-        restart_required = True
 
     if body.background_workers is not None:
         workers = body.background_workers

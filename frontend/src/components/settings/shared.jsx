@@ -10,11 +10,6 @@ export const DEFAULT_MODELS = [
   'google/gemini-pro-1.5',
 ]
 
-export const BACKEND_OPTIONS = [
-  { value: 'sqlite',  label: 'SQLite',  desc: 'Row-oriented, zero-config, great for development and small teams' },
-  { value: 'duckdb',  label: 'DuckDB',  desc: 'Columnar OLAP — faster analytics on large trace volumes' },
-]
-
 export const SCORER_OPTIONS = [
   { value: 'auto',      label: 'Auto (Recommended)', recommended: true,
     desc: 'Picks the best available method automatically — good for most teams',

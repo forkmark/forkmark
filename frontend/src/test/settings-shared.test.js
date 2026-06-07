@@ -1,25 +1,11 @@
 import { describe, it, expect } from 'vitest'
-import { S, Toggle, DEFAULT_MODELS, BACKEND_OPTIONS, SCORER_OPTIONS, COMMON_TIMEZONES } from '../components/settings/shared.jsx'
+import { S, Toggle, DEFAULT_MODELS, SCORER_OPTIONS, COMMON_TIMEZONES } from '../components/settings/shared.jsx'
 
 describe('Settings shared constants', () => {
   it('DEFAULT_MODELS contains expected models', () => {
     expect(DEFAULT_MODELS).toContain('gpt-4o')
     expect(DEFAULT_MODELS).toContain('gpt-4o-mini')
     expect(DEFAULT_MODELS.length).toBeGreaterThan(3)
-  })
-
-  it('BACKEND_OPTIONS has sqlite and duckdb', () => {
-    const values = BACKEND_OPTIONS.map(o => o.value)
-    expect(values).toContain('sqlite')
-    expect(values).toContain('duckdb')
-  })
-
-  it('every BACKEND_OPTION has value, label, desc', () => {
-    for (const opt of BACKEND_OPTIONS) {
-      expect(opt.value).toBeDefined()
-      expect(opt.label).toBeDefined()
-      expect(opt.desc).toBeDefined()
-    }
   })
 
   it('SCORER_OPTIONS has auto as first option', () => {

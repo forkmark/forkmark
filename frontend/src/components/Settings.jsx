@@ -40,10 +40,8 @@ export default function Settings() {
   const [timezone, setTimezone]       = useState('')
 
   // system info
-  const [currentBackend,  setCurrentBackend]  = useState('sqlite')
-  const [selectedBackend, setSelectedBackend] = useState('sqlite')
-  const [duckdbAvailable, setDuckdbAvailable] = useState(false)
-  const [restartNeeded,   setRestartNeeded]   = useState(false)
+  const [storage,        setStorage]       = useState('sqlite')
+  const [restartNeeded,  setRestartNeeded] = useState(false)
 
   // Background workers
   const [currentWorkers,  setCurrentWorkers]  = useState(4)
@@ -88,10 +86,7 @@ export default function Settings() {
         setTimezone(settings.timezone || '')
 
         // System info
-        const be = sysInfo.trace_backend || 'sqlite'
-        setCurrentBackend(be)
-        setSelectedBackend(be)
-        setDuckdbAvailable(sysInfo.duckdb_available || false)
+        setStorage(sysInfo.storage || (sysInfo.database_url_set ? 'postgresql' : 'sqlite'))
 
         const workers = sysInfo.background_workers || 4
         setCurrentWorkers(workers)
@@ -180,7 +175,6 @@ export default function Settings() {
     setSaving(true)
     try {
       const body = {}
-      if (overrides.trace_backend !== undefined) body.trace_backend = overrides.trace_backend
       if (overrides.background_workers !== undefined) body.background_workers = overrides.background_workers
       if (overrides.require_ui_auth !== undefined) body.require_ui_auth = overrides.require_ui_auth
 
@@ -242,8 +236,7 @@ export default function Settings() {
 
       <InfraSection
         saving={saving}
-        currentBackend={currentBackend} selectedBackend={selectedBackend} setSelectedBackend={setSelectedBackend}
-        duckdbAvailable={duckdbAvailable} restartNeeded={restartNeeded}
+        storage={storage} restartNeeded={restartNeeded}
         currentWorkers={currentWorkers} selectedWorkers={selectedWorkers} setSelectedWorkers={setSelectedWorkers}
         enterprise={enterprise}
         onSaveSystemInfo={saveSystemInfo}

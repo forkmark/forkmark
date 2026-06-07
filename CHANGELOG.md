@@ -36,15 +36,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   enterprise features that aren't bundled in the OSS build; sidebar version string
   corrected to v0.1.2.
 
+### Removed
+
+- **DuckDB storage backend** — removed the experimental DuckDB backend (and the
+  `FM_TRACE_BACKEND` setting, the Settings "Storage Engine" picker, and the `duckdb`
+  dependency). DuckDB is an embedded single-writer analytical engine; it can't be
+  shared across API replicas and isn't suited to be the transactional store for a
+  multi-tenant service. Forkmark now supports SQLite (default) and PostgreSQL
+  (production) — the standard, horizontally-scalable path. Settings shows a
+  read-only storage indicator instead of a backend picker.
+
 ### Fixed
 
-- **DuckDB backend "write-write conflict" on startup/CI** — the DuckDB wrapper ran
-  each statement on a child `cursor()` (a separate transaction in DuckDB) while the
-  connection manager held `BEGIN`/`COMMIT` on the main connection, so schema-init
-  DDL (e.g. `ALTER TABLE workflow_runs ADD COLUMN`) collided with the open
-  transaction. All statements now share the single connection (results are
-  materialised eagerly), fixing both the CI `TestStoreDuckDB` errors and real
-  `FM_TRACE_BACKEND=duckdb` startup crashes.
 - **Provider form did nothing on "Add Provider"** — the submit button was silently
   disabled when the (required) Name field was empty. Name now has a visible required
   marker and inline validation instead of a dead button.
@@ -160,7 +163,7 @@ First public open-source release. This version focuses on the LLM A/B comparison
 - No-code workflow runner and prompt playground.
 - Demo gallery with one-click seed data.
 - Multi-tenant PostgreSQL support with SCIM 2.0 provisioning.
-- SQLite, DuckDB, and PostgreSQL storage backends.
+- SQLite and PostgreSQL storage backends.
 - Dark/light theme with fully responsive UI.
 - API key authentication for SDK operations.
 - Review queue with assignment and collaboration features.

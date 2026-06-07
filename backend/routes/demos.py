@@ -12,14 +12,18 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 
 from backend.deps import db, ui_read_auth, ui_write_auth, stats_local_cache
-from config import config
 from core.models import RunStatus, DecisionChoice, ConfidenceLevel, EvalRunStatus
 from core.comparator import divergence_score as _div_score, summarize_divergence
 
 
 def _agent_feature_enabled() -> bool:
-    """Check if agent comparison feature is enabled."""
-    return getattr(config, "ENABLE_AGENT_COMPARISON", False)
+    """Check if agent comparison is enabled.
+
+    Read live from the environment (default off) rather than the cached config
+    value, so it behaves as a true kill-switch and stays deterministic in tests.
+    """
+    import os
+    return os.getenv("FM_ENABLE_AGENT_COMPARISON", "false").lower() in ("true", "1", "yes")
 
 router = APIRouter(prefix="/api", tags=["demos"])
 

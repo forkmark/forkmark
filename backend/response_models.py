@@ -259,8 +259,7 @@ class SettingsResponse(BaseModel):
         extra = "allow"
 
 class SystemInfoResponse(BaseModel):
-    trace_backend: str = "sqlite"
-    duckdb_available: bool = False
+    storage: str = "sqlite"
     database_url_set: bool = False
     version: str
     background_workers: int = 4

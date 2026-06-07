@@ -14,9 +14,6 @@ argon2-cffi>=23.1.0
 # PostgreSQL support (optional — only needed when FM_DATABASE_URL is set)
 psycopg2-binary>=2.9.9
 
-# DuckDB columnar OLAP (optional — only needed when FM_TRACE_BACKEND=duckdb)
-duckdb>=1.0.0
-
 # ── Optional divergence scorers ────────────────────────────────────────────────
 # Semantic scoring (FM_DIVERGENCE_SCORER=semantic or auto):
 #   pip install "forkmark[semantic]"  OR  pip install sentence-transformers numpy

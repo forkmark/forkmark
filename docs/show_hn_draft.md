@@ -16,7 +16,7 @@ What it does:
 - One-click export to DPO, OpenAI fine-tuning, CSV, and JSONL formats
 - Consent-gated data collection — reviewers opt in to having decisions used for training
 - No-code workflow runner for non-technical team members
-- SQLite (dev) / PostgreSQL (prod) with optional DuckDB for analytics
+- SQLite (dev) / PostgreSQL (prod)
 
 What it doesn't do: Forkmark is not a logging/observability tool. It doesn't replace LangSmith or Weights & Biases for production monitoring. It's specifically for structured evaluation and preference data collection.
 

@@ -1,79 +1,31 @@
-import { S, BACKEND_OPTIONS } from './shared.jsx'
+import { S } from './shared.jsx'
 
 export default function InfraSection({
   saving,
-  currentBackend, selectedBackend, setSelectedBackend,
-  duckdbAvailable, restartNeeded,
+  storage, restartNeeded,
   currentWorkers, selectedWorkers, setSelectedWorkers,
   enterprise,
   onSaveSystemInfo,
 }) {
-  const backendChanged = selectedBackend !== currentBackend
   const workersChanged = selectedWorkers !== currentWorkers
 
   return (
     <>
       <div style={S.section}>Infrastructure</div>
 
-      {/* Storage Engine Card */}
+      {/* Storage Card (read-only indicator) */}
       <div style={S.card}>
-        <h2 style={S.cardH}>Storage Engine</h2>
+        <h2 style={S.cardH}>Storage</h2>
         <p style={S.cardSub}>
-          Controls how trace data (step outputs, comparisons, metrics) is stored.
-          Changes require a server restart to take effect.
+          Forkmark uses SQLite by default. For production and teams, set
+          <code> FM_DATABASE_URL</code> to a PostgreSQL connection string.
         </p>
-
         <div style={S.row}>
-          <label htmlFor="settings-backend" style={S.label}>Backend</label>
-          <div style={{ display:'flex', gap:8, alignItems:'center' }}>
-            <select
-              id="settings-backend"
-              style={{ ...S.input, flex:1 }}
-              value={selectedBackend}
-              onChange={e => setSelectedBackend(e.target.value)}
-            >
-              {BACKEND_OPTIONS.map(opt => (
-                <option
-                  key={opt.value}
-                  value={opt.value}
-                  disabled={opt.value === 'duckdb' && !duckdbAvailable}
-                >
-                  {opt.label}{opt.value === 'duckdb' && !duckdbAvailable ? ' (not installed)' : ''}
-                </option>
-              ))}
-            </select>
-            <span style={S.badge(true)}>
-              <span style={S.dot(true)} />
-              {currentBackend === 'duckdb' ? 'DuckDB' : 'SQLite'}
-            </span>
-          </div>
-          <p style={S.hint}>
-            {BACKEND_OPTIONS.find(o => o.value === selectedBackend)?.desc}
-          </p>
-          {selectedBackend === 'duckdb' && !duckdbAvailable && (
-            <p style={{ ...S.hint, color:'var(--red)' }}>
-              DuckDB is not installed. Run <code>pip install duckdb</code> first.
-            </p>
-          )}
+          <span style={S.badge(true)}>
+            <span style={S.dot(true)} />
+            {storage === 'postgresql' ? 'PostgreSQL' : 'SQLite'}
+          </span>
         </div>
-
-        {backendChanged && !restartNeeded && (
-          <div style={S.footer}>
-            <button
-              style={S.btn(true, saving || (selectedBackend === 'duckdb' && !duckdbAvailable))}
-              disabled={saving || (selectedBackend === 'duckdb' && !duckdbAvailable)}
-              onClick={() => onSaveSystemInfo({ trace_backend: selectedBackend })}
-            >
-              {saving ? 'Saving…' : 'Apply & Restart Required'}
-            </button>
-            <button
-              style={S.btn(false, false)}
-              onClick={() => setSelectedBackend(currentBackend)}
-            >
-              Cancel
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Background Workers Card */}

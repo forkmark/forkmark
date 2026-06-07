@@ -235,7 +235,7 @@ Export hundreds of these, fine-tune your model, deploy the improved version as t
   │   Database    │    │   Redis (optional)  │    │ AI Providers  │
   │  SQLite (dev) │    │  Caching, rate      │    │ OpenAI        │
   │  PostgreSQL   │    │  limiting, message  │    │ Anthropic     │
-  │  DuckDB       │    │  bus, Celery broker │    │ Google        │
+  │  (prod)       │    │  bus, Celery broker │    │ Google        │
   └──────────────┘    └────────────────────┘    │ Ollama        │
                                                 │ OpenRouter    │
                                                 │ Custom        │
@@ -268,7 +268,7 @@ TestSet                         ─── Reusable collection of test inputs (ve
 |---|---|---|
 | **Frontend** | React 18.3 + Vite 5.3 | Hash-based routing, lazy-loaded views, CSS variables, Recharts for charts |
 | **Backend** | Python + FastAPI | Async, Pydantic validation, 16 route modules |
-| **Database** | SQLite / PostgreSQL / DuckDB | SQLite for dev, Postgres for production, DuckDB for analytics |
+| **Database** | SQLite / PostgreSQL | SQLite for dev, PostgreSQL for production |
 | **Caching** | Redis (optional) | Inline diff cache (24h TTL), rate limiting, message bus |
 | **Background** | Thread pool or Celery | Async divergence scoring (1–16 configurable workers) |
 | **Auth** | API keys (Argon2id) + JWT + CI tokens | Multi-tenant RBAC with 5 roles and 12 permissions |
@@ -742,8 +742,7 @@ All configuration is via environment variables (or `~/.forkmark/.env`):
 | **Server** | `FM_HOST` | `127.0.0.1` | Bind address |
 | | `FM_PORT` | `7700` | Port |
 | **Database** | `FM_DB_PATH` | `~/.forkmark/forkmark.db` | SQLite path |
-| | `FM_DATABASE_URL` | — | PostgreSQL connection string |
-| | `FM_TRACE_BACKEND` | — | DuckDB path for analytics |
+| | `FM_DATABASE_URL` | — | PostgreSQL connection string (enables Postgres) |
 | **Scoring** | `FM_DIVERGENCE_SCORER` | `auto` | `auto`, `lexical`, `semantic`, `openai`, `llm_judge` |
 | | `FM_ST_MODEL` | `all-MiniLM-L6-v2` | Sentence-transformer model |
 | | `FM_JUDGE_MODEL` | `gpt-4o-mini` | LLM judge model |

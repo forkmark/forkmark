@@ -26,12 +26,12 @@ Forkmark is a self-hosted evaluation platform built as a Python backend with a R
 │  └──────────────────────────────────────────────────────────────┘   │
 └────────────────────────────┬────────────────────────────────────────┘
                              │
-              ┌──────────────┼──────────────┐
-              ▼              ▼              ▼
-         ┌─────────┐  ┌──────────┐  ┌────────────┐
-         │ SQLite   │  │ DuckDB   │  │ PostgreSQL │
-         │ (dev)    │  │ (perf)   │  │ (prod)     │
-         └─────────┘  └──────────┘  └────────────┘
+                     ┌──────────────┴──────────────┐
+                     ▼                             ▼
+                ┌─────────┐                  ┌────────────┐
+                │ SQLite   │                  │ PostgreSQL │
+                │ (dev)    │                  │ (prod)     │
+                └─────────┘                  └────────────┘
 ```
 
 ## Data model
@@ -135,11 +135,10 @@ Key design decisions:
 
 ## Storage backends
 
-Forkmark supports three storage backends, configurable via `FM_TRACE_BACKEND`:
+Forkmark supports two storage backends:
 
-- **SQLite** (default) — Zero-config, single-file database. Suitable for local development and small-to-medium deployments. All tables use WAL mode for concurrent read/write.
-- **DuckDB** — Columnar analytics engine. Better for large evaluation datasets where aggregation queries dominate. Requires `pip install duckdb`.
-- **PostgreSQL** — Production-grade. Required for multi-tenant deployments. Configured via `DATABASE_URL` environment variable.
+- **SQLite** (default) — Zero-config, single-file database. Suitable for local development and small-to-medium deployments. Uses WAL mode for concurrent read/write.
+- **PostgreSQL** — Production-grade. Recommended for teams and required for multi-tenant deployments. Enabled by setting the `FM_DATABASE_URL` environment variable.
 
 All three backends share the same `Store` interface in `core/store.py`, so switching requires only a config change and restart.
 

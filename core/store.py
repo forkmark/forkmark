@@ -1,14 +1,9 @@
-"""Forkmark database layer — SQLite default, PostgreSQL via DATABASE_URL,
-DuckDB via FM_TRACE_BACKEND=duckdb.
+"""Forkmark database layer — SQLite by default, PostgreSQL via DATABASE_URL.
 
 PostgreSQL support requires psycopg2-binary:
     pip install psycopg2-binary
 
-DuckDB support requires duckdb:
-    pip install duckdb
-
 Set FM_DATABASE_URL=postgresql://user:pass@host:5432/dbname to enable PostgreSQL.
-Set FM_TRACE_BACKEND=duckdb to enable DuckDB columnar storage.
 """
 
 from __future__ import annotations
@@ -175,144 +170,6 @@ class _SQLiteWrapper:
 
     def fetchone(self, sql, params=()):
         return self._c.execute(sql, params).fetchone()
-
-
-# ── DuckDB adapter ────────────────────────────────────────────────────────────
-
-class _DuckDBResult:
-    """Dict-like result rows (matching sqlite3.Row API).
-
-    Rows are materialised eagerly so the result stays valid even after the
-    underlying connection is reused for the next statement — DuckDB results are
-    tied to the connection's last query, so lazy fetching is unsafe when all
-    statements share one connection (which they must, to stay in one transaction).
-    """
-    def __init__(self, source):
-        self._cols = [d[0] for d in source.description] if source.description else []
-        self._rows = source.fetchall() if self._cols else []
-        self._rowcount = getattr(source, 'rowcount', -1)
-        self._i = 0
-
-    def fetchall(self):
-        return [dict(zip(self._cols, r)) for r in self._rows]
-
-    def fetchone(self):
-        if self._i >= len(self._rows):
-            return None
-        row = self._rows[self._i]
-        self._i += 1
-        return dict(zip(self._cols, row))
-
-    def __iter__(self):
-        for row in self._rows:
-            yield dict(zip(self._cols, row))
-
-    @property
-    def rowcount(self):
-        return self._rowcount if self._rowcount is not None else -1
-
-
-class _DuckDBWrapper:
-    """Wraps a DuckDB connection with the same interface as _SQLiteWrapper.
-
-    All statements run on the single underlying connection (not on child
-    ``cursor()`` objects). In DuckDB each cursor is its own transaction, so
-    mixing cursor-per-statement with the BEGIN/COMMIT held on the main
-    connection caused catalog "write-write conflict" errors on DDL (e.g.
-    ALTER TABLE during schema init). Sharing one connection keeps every
-    statement in the same transaction. Access is already serialised by the
-    connection manager's write lock.
-    """
-    def __init__(self, conn):
-        self._conn = conn
-
-    def _run(self, sql, params=()):
-        if params:
-            self._conn.execute(sql, params)
-        else:
-            self._conn.execute(sql)
-        return self._conn
-
-    def execute(self, sql, params=()):
-        return _DuckDBResult(self._run(sql, params))
-
-    def executemany(self, sql, params_seq):
-        self._conn.executemany(sql, list(params_seq))
-        return _DuckDBResult(self._conn)
-
-    def executescript(self, sql):
-        # DuckDB does not support CASCADE / SET NULL / SET DEFAULT on FK constraints
-        _fk_action_re = re.compile(
-            r'\bON\s+(DELETE|UPDATE)\s+(CASCADE|SET\s+NULL|SET\s+DEFAULT|RESTRICT|NO\s+ACTION)',
-            re.IGNORECASE,
-        )
-        for raw_stmt in sql.split(";"):
-            stmt = raw_stmt.strip()
-            if not stmt or stmt.upper().startswith("PRAGMA"):
-                continue
-            stmt = _fk_action_re.sub("", stmt)
-            try:
-                self._conn.execute(stmt)
-            except Exception as e:
-                msg = str(e).lower()
-                if "already exists" not in msg and "duplicate" not in msg:
-                    raise
-
-    def fetchall(self, sql, params=()):
-        self._run(sql, params)
-        if not self._conn.description:
-            return []
-        cols = [d[0] for d in self._conn.description]
-        return [dict(zip(cols, row)) for row in self._conn.fetchall()]
-
-    def fetchone(self, sql, params=()):
-        self._run(sql, params)
-        if not self._conn.description:
-            return None
-        cols = [d[0] for d in self._conn.description]
-        row = self._conn.fetchone()
-        return dict(zip(cols, row)) if row else None
-
-
-class _DuckDBConn:
-    """DuckDB connection manager — columnar OLAP with embedded simplicity."""
-    def __init__(self, path: str):
-        self._path = path
-        self._write_lock = threading.Lock()
-        self._conn = None
-
-    def _get_conn(self):
-        if self._conn is None:
-            try:
-                import duckdb
-            except ImportError:
-                raise ImportError(
-                    "duckdb is required when FM_TRACE_BACKEND=duckdb.\n"
-                    "Install it: pip install duckdb"
-                )
-            self._conn = duckdb.connect(self._path)
-        return self._conn
-
-    @contextmanager
-    def connect(self):
-        with self._write_lock:
-            conn = self._get_conn()
-            try:
-                conn.execute("BEGIN TRANSACTION")
-                yield _DuckDBWrapper(conn)
-                conn.execute("COMMIT")
-            except Exception:
-                try:
-                    conn.execute("ROLLBACK")
-                except Exception:
-                    pass
-                raise
-
-    @contextmanager
-    def read_connect(self):
-        with self._write_lock:
-            conn = self._get_conn()
-            yield _DuckDBWrapper(conn)
 
 
 # ── PostgreSQL adapter ────────────────────────────────────────────────────────
@@ -543,16 +400,9 @@ def _estimate_cost(model_id: str, tokens_input: int, tokens_output: int) -> Opti
 
 
 def _add_column(c, table: str, col: str, typedef: str):
-    """Helper: add a column, silently ignoring 'already exists' errors.
-
-    DuckDB does not support constraints (NOT NULL) on ALTER TABLE ADD COLUMN,
-    so we strip NOT NULL when the wrapper is DuckDB-based.
-    """
-    td = typedef
-    if isinstance(c, _DuckDBWrapper):
-        td = re.sub(r'\bNOT\s+NULL\b', '', td, flags=re.IGNORECASE).strip()
+    """Helper: add a column, silently ignoring 'already exists' errors."""
     try:
-        c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {td}")
+        c.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typedef}")
     except Exception as e:
         msg = str(e).lower()
         if "duplicate column" not in msg and "already exists" not in msg:
@@ -831,11 +681,9 @@ _MIGRATIONS = [
 ]
 
 class Database:
-    def __init__(self, db_path: str, database_url: str = "", trace_backend: str = ""):
+    def __init__(self, db_path: str, database_url: str = ""):
         if database_url:
             self._adapter = _PostgreSQLConn(database_url)
-        elif trace_backend.lower() == "duckdb":
-            self._adapter = _DuckDBConn(str(db_path))
         else:
             self._adapter = _SQLiteConn(str(db_path))
         self._init()
