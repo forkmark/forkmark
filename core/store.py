@@ -180,54 +180,65 @@ class _SQLiteWrapper:
 # ── DuckDB adapter ────────────────────────────────────────────────────────────
 
 class _DuckDBResult:
-    """Wraps a DuckDB cursor to return dict-like rows (matching sqlite3.Row API)."""
-    def __init__(self, cursor):
-        self._cursor = cursor
-        self._cols = [d[0] for d in cursor.description] if cursor.description else []
+    """Dict-like result rows (matching sqlite3.Row API).
 
-    def _to_dict(self, row):
-        if row is None:
-            return None
-        return dict(zip(self._cols, row))
+    Rows are materialised eagerly so the result stays valid even after the
+    underlying connection is reused for the next statement — DuckDB results are
+    tied to the connection's last query, so lazy fetching is unsafe when all
+    statements share one connection (which they must, to stay in one transaction).
+    """
+    def __init__(self, source):
+        self._cols = [d[0] for d in source.description] if source.description else []
+        self._rows = source.fetchall() if self._cols else []
+        self._rowcount = getattr(source, 'rowcount', -1)
+        self._i = 0
 
     def fetchall(self):
-        if not self._cols:
-            return []
-        return [self._to_dict(r) for r in self._cursor.fetchall()]
+        return [dict(zip(self._cols, r)) for r in self._rows]
 
     def fetchone(self):
-        if not self._cols:
+        if self._i >= len(self._rows):
             return None
-        return self._to_dict(self._cursor.fetchone())
+        row = self._rows[self._i]
+        self._i += 1
+        return dict(zip(self._cols, row))
 
     def __iter__(self):
-        if not self._cols:
-            return
-        while True:
-            row = self._cursor.fetchone()
-            if row is None:
-                break
-            yield self._to_dict(row)
+        for row in self._rows:
+            yield dict(zip(self._cols, row))
 
     @property
     def rowcount(self):
-        return getattr(self._cursor, 'rowcount', -1)
+        return self._rowcount if self._rowcount is not None else -1
 
 
 class _DuckDBWrapper:
-    """Wraps a DuckDB connection with the same interface as _SQLiteWrapper."""
+    """Wraps a DuckDB connection with the same interface as _SQLiteWrapper.
+
+    All statements run on the single underlying connection (not on child
+    ``cursor()`` objects). In DuckDB each cursor is its own transaction, so
+    mixing cursor-per-statement with the BEGIN/COMMIT held on the main
+    connection caused catalog "write-write conflict" errors on DDL (e.g.
+    ALTER TABLE during schema init). Sharing one connection keeps every
+    statement in the same transaction. Access is already serialised by the
+    connection manager's write lock.
+    """
     def __init__(self, conn):
         self._conn = conn
 
+    def _run(self, sql, params=()):
+        if params:
+            self._conn.execute(sql, params)
+        else:
+            self._conn.execute(sql)
+        return self._conn
+
     def execute(self, sql, params=()):
-        cursor = self._conn.cursor()
-        cursor.execute(sql, params)
-        return _DuckDBResult(cursor)
+        return _DuckDBResult(self._run(sql, params))
 
     def executemany(self, sql, params_seq):
-        cursor = self._conn.cursor()
-        cursor.executemany(sql, list(params_seq))
-        return _DuckDBResult(cursor)
+        self._conn.executemany(sql, list(params_seq))
+        return _DuckDBResult(self._conn)
 
     def executescript(self, sql):
         # DuckDB does not support CASCADE / SET NULL / SET DEFAULT on FK constraints
@@ -248,20 +259,18 @@ class _DuckDBWrapper:
                     raise
 
     def fetchall(self, sql, params=()):
-        cursor = self._conn.cursor()
-        cursor.execute(sql, params)
-        if not cursor.description:
+        self._run(sql, params)
+        if not self._conn.description:
             return []
-        cols = [d[0] for d in cursor.description]
-        return [dict(zip(cols, row)) for row in cursor.fetchall()]
+        cols = [d[0] for d in self._conn.description]
+        return [dict(zip(cols, row)) for row in self._conn.fetchall()]
 
     def fetchone(self, sql, params=()):
-        cursor = self._conn.cursor()
-        cursor.execute(sql, params)
-        if not cursor.description:
+        self._run(sql, params)
+        if not self._conn.description:
             return None
-        cols = [d[0] for d in cursor.description]
-        row = cursor.fetchone()
+        cols = [d[0] for d in self._conn.description]
+        row = self._conn.fetchone()
         return dict(zip(cols, row)) if row else None
 
 

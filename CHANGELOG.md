@@ -38,6 +38,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **DuckDB backend "write-write conflict" on startup/CI** — the DuckDB wrapper ran
+  each statement on a child `cursor()` (a separate transaction in DuckDB) while the
+  connection manager held `BEGIN`/`COMMIT` on the main connection, so schema-init
+  DDL (e.g. `ALTER TABLE workflow_runs ADD COLUMN`) collided with the open
+  transaction. All statements now share the single connection (results are
+  materialised eagerly), fixing both the CI `TestStoreDuckDB` errors and real
+  `FM_TRACE_BACKEND=duckdb` startup crashes.
 - **Provider form did nothing on "Add Provider"** — the submit button was silently
   disabled when the (required) Name field was empty. Name now has a visible required
   marker and inline validation instead of a dead button.
