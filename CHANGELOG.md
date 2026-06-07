@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Workflow Builder crash** — the "Run Comparison" view threw
+  `r.toLowerCase is not a function` because the `Input`/`Textarea` components
+  derived their DOM id from `label.toLowerCase()`, but several fields pass a JSX
+  element (with an `InfoTip`) as the label. Now guarded with a `useId()` fallback
+  so JSX labels work and accessibility (label association) is preserved.
+- Defensively hardened `modelCostPer1M()` against non-string model ids.
 - `sdk/setup.py` declared the Apache license while the project is MIT; corrected
   the license classifier to match.
 

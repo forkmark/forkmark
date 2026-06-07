@@ -6,7 +6,7 @@
  *
  * Test cases can also be stored as persistent Test Sets (via the Test Sets view).
  */
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useId } from 'react'
 import { api, dispatchApiError } from '../api.js'
 import {
   PageHeader, InfoTip, pageStyle, panel, btnPrimary, btnSecondary, btnDanger,
@@ -100,7 +100,10 @@ function uid() { return Math.random().toString(36).slice(2, 8) }
 
 function Input({ label, value, onChange, placeholder, hint, type = 'text', id }) {
   const [focused, setFocused] = useState(false)
-  const inputId = id || (label ? `wb-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined)
+  const autoId = useId()
+  const inputId = id || (typeof label === 'string'
+    ? `wb-${label.toLowerCase().replace(/\s+/g, '-')}`
+    : autoId)
   return (
     <div style={S.row}>
       {label && <label htmlFor={inputId} style={S.label}>{label}</label>}
@@ -121,7 +124,10 @@ function Input({ label, value, onChange, placeholder, hint, type = 'text', id })
 
 function Textarea({ label, value, onChange, placeholder, rows = 3, hint, id }) {
   const [focused, setFocused] = useState(false)
-  const inputId = id || (label ? `wb-${label.toLowerCase().replace(/\s+/g, '-')}` : undefined)
+  const autoId = useId()
+  const inputId = id || (typeof label === 'string'
+    ? `wb-${label.toLowerCase().replace(/\s+/g, '-')}`
+    : autoId)
   return (
     <div style={S.row}>
       {label && <label htmlFor={inputId} style={S.label}>{label}</label>}

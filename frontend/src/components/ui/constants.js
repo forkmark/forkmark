@@ -18,7 +18,7 @@ export const MODEL_PRICING = {
 export const MODELS = Object.keys(MODEL_PRICING)
 
 export function modelCostPer1M(modelId) {
-  if (!modelId) return null
+  if (!modelId || typeof modelId !== 'string') return null
   const lower = modelId.toLowerCase()
   for (const [key, prices] of Object.entries(MODEL_PRICING)) {
     if (lower.includes(key)) return prices
