@@ -1,0 +1,173 @@
+{
+  "demo_name": "sales",
+  "display_name": "Sales",
+  "workflow": {
+    "name": "sales-outreach-email",
+    "description": "4-step outreach email pipeline: prospect context analysis, subject line generation, email body, and call-to-action."
+  },
+  "eval_run": {
+    "name": "High-Personalization v2 vs Generic Template v1 — Sales Outreach",
+    "description": "Comparing highly personalized prospect-researched outreach against generic template-based cold emails."
+  },
+  "branch_a": {
+    "label": "High-Personalization Prompt v2 (Baseline)",
+    "name": "high-personalization-v2",
+    "model_id": "gpt-4o",
+    "temperature": 0.5,
+    "is_baseline": true
+  },
+  "branch_b": {
+    "label": "Generic Outreach Template v1 (Challenger)",
+    "name": "generic-template-v1",
+    "model_id": "gpt-4o",
+    "temperature": 0.5,
+    "is_baseline": false
+  },
+  "steps": [
+    "prospect_context",
+    "subject_line",
+    "email_body",
+    "call_to_action"
+  ],
+  "cases": [
+    {
+      "label": "saas-fintech-cto",
+      "prospect": "Target: Marcus Chen, CTO at Payflow (Series B fintech, 180 employees, payment infrastructure). Recent trigger: Payflow just announced $40M Series B, hiring 30 engineers. Marcus posted on LinkedIn about scaling microservices pain. Our product: Forkmark LLMOps — they're building an LLM-based transaction classification feature.",
+      "pc_a": "Prospect context: Marcus Chen, CTO, Series B fintech in active hypergrowth. Recent $40M raise means technical hiring surge — 30 engineers incoming, which means LLM tooling decisions are being made now. LinkedIn post about microservices scaling suggests infrastructure-minded leader who will care about reliability and observability. Payment infrastructure context: LLM transaction classification needs strict evaluation — false positives are expensive. High relevance: Forkmark's evaluation and version control directly addresses what Marcus will face as his team scales LLM features.",
+      "pc_b": "Prospect is a CTO at a fintech company. They are hiring engineers and might need LLM tooling. Our product helps with LLM operations.",
+      "sl_a": "Subject: Scaling LLM evals as you go from 5 to 35 engineers, Marcus",
+      "sl_b": "Subject: Improve your LLM operations with Forkmark",
+      "eb_a": "Hi Marcus,\n\nCongratulations on the Series B — $40M and 30 engineers incoming is a serious scaling moment.\n\nI saw your post about microservices complexity and it reminded me of a conversation I had with the CTO at [similar fintech] six months before they hit 200K daily LLM calls. The problem they ran into: no way to track whether a prompt change in their transaction classifier was improving or degrading accuracy — and by the time they found out, it had been in production for 3 weeks.\n\nThat's the problem Forkmark solves. It's version control and evaluation infrastructure for LLM features — so when your team ships a prompt update to your transaction classification model, you can see a side-by-side comparison of outputs, automated divergence scores, and human review workflow before it goes live.\n\nWith 30 engineers joining in the next 6 months, you're about to have a lot more people touching your LLM features. Worth 20 minutes to see if we can save you the 3-week-silent-regression problem?",
+      "eb_b": "Hi Marcus,\n\nI hope this email finds you well. I'm reaching out because I believe Forkmark could be a great fit for Payflow.\n\nForkmark is an LLMOps platform that helps engineering teams manage and evaluate their LLM features. Our platform offers version control, A/B testing, and automated evaluation capabilities.\n\nGiven that Payflow is growing quickly, you may be facing challenges with your LLM operations. Forkmark can help you scale your AI capabilities efficiently.\n\nWould you be open to a quick call to learn more about how Forkmark can benefit Payflow?",
+      "cta_a": "Are you free for 20 minutes this week or next? I can show you the transaction classifier evaluation workflow specifically — takes 15 minutes to see and another 5 to set up a trial. Or if you'd rather, here's a 3-minute video of a payment team using it: [link]",
+      "cta_b": "I'd love to schedule a quick 30-minute demo call. Please let me know your availability or book directly using my calendar link: [link]."
+    },
+    {
+      "label": "ecommerce-vp-engineering",
+      "prospect": "Target: Sarah O'Brien, VP Engineering at StyleHub (e-commerce fashion, 300 employees, profitable). Recent trigger: StyleHub just launched an AI styling recommendation feature that got a mixed press review ('recommendations feel random'). Sarah tweeted about their search relevance work. Our product: Forkmark for evaluating recommendation and search LLM features.",
+      "pc_a": "Prospect context: VP Engineering at a profitable e-commerce company dealing with a public AI feature quality issue. The 'recommendations feel random' press review is a live pain point — Sarah almost certainly got that feedback internally and is now under pressure to fix it. Search relevance work suggests she's already investing in AI quality. Profitable company = budget available; fashion = high SKU count where recommendation quality has direct revenue impact. Perfect timing: they've shipped and got signal, now need to iterate with confidence.",
+      "pc_b": "Prospect is a VP Engineering at an e-commerce company with an AI recommendation feature. They might benefit from better LLM evaluation tools.",
+      "sl_a": "Subject: Re: the 'random recommendations' coverage — one thing that might help",
+      "sl_b": "Subject: Enhance your AI recommendation system with Forkmark",
+      "eb_a": "Hi Sarah,\n\nI read the TechCrunch piece on StyleHub's styling feature — specifically the bit about recommendations feeling random. I'd guess that's not news to you.\n\nThe problem most teams hit with recommendation LLMs isn't the model — it's that once you start iterating on the prompt or retrieval logic, there's no systematic way to know if version 2 is actually better than version 1 across the full range of queries. You end up relying on spot checks and gut feel, which is how you get 'improved' features that still feel random in production.\n\nForkmark gives you a structured evaluation layer: you run both versions against your query set, get automated divergence scoring, and a side-by-side review workflow before you ship. One team we work with caught a prompt change that improved their top-10 results by 23% but degraded long-tail recommendations by 18% — they would have shipped it without Forkmark.\n\nGiven you're already invested in search relevance, the eval infrastructure probably makes sense right now. Worth a look?",
+      "eb_b": "Hi Sarah,\n\nI hope you're having a great day. I wanted to reach out because I think Forkmark could really help StyleHub with your AI recommendation challenges.\n\nOur platform provides comprehensive LLM evaluation and version control capabilities that can help your team iterate more confidently on AI features.\n\nMany e-commerce companies use Forkmark to improve their recommendation systems and ensure quality before deployment.\n\nWould you be interested in learning more about how we can help?",
+      "cta_a": "15 minutes — I can walk you through exactly how a recommendation team runs evals in Forkmark, including the query coverage and divergence scoring setup. Does Thursday or Friday this week work?",
+      "cta_b": "Can we schedule a brief call to discuss how Forkmark could help your team? Here's my calendar: [link]"
+    },
+    {
+      "label": "healthcare-cdo",
+      "prospect": "Target: Dr. Priya Mehta, Chief Digital Officer at Meridian Health (NHS-adjacent private hospital group, 8 hospitals, 4,000 staff). Recent trigger: Meridian published a digital transformation strategy doc mentioning 'AI-assisted clinical documentation' as a 2024-25 priority. Dr. Mehta spoke at a health tech conference about AI governance concerns. Our product: Forkmark for LLM version control and evaluation in clinical note summarisation.",
+      "pc_a": "Prospect context: CDO of a mid-size private hospital group with explicit AI documentation plans and a stated governance concern. The conference talk about AI governance is highly relevant — this is a leader who has already thought about the risks and will be receptive to an evaluation and audit trail framing, not just 'AI makes things faster.' Clinical note summarisation is an LLM use case where version control and evaluation are not optional — a regression in a clinical summary prompt has patient safety implications. Governance and auditability are the lead value prop here, not speed or cost.",
+      "pc_b": "Prospect is a CDO at a hospital group planning to use AI for clinical documentation. They have governance concerns about AI.",
+      "sl_a": "Subject: AI governance for clinical documentation — what version control looks like in practice",
+      "sl_b": "Subject: Support Meridian's AI documentation goals with Forkmark",
+      "eb_a": "Dear Dr. Mehta,\n\nI heard your talk at the Health Tech Summit — the point about governance being the bottleneck for clinical AI adoption resonated with me, and I think it's exactly right.\n\nWhen teams deploy LLMs for clinical note summarisation, the technical risk is rarely the initial model. It's what happens on iteration three, when a junior engineer tweaks a prompt to improve throughput and nobody has a formal record of what changed, what it was tested on, or whether a clinical reviewer signed off. That's where governance frameworks break down.\n\nForkmark provides the version control and evaluation audit trail specifically for LLM features: every prompt change is versioned, compared against a test set, divergence-scored, and requires a documented review step before deployment. The audit log is exportable for compliance purposes.\n\nGiven Meridian's 2024-25 AI documentation roadmap, you're likely at the stage where tooling decisions are being made. I'd welcome the chance to show you what the governance layer looks like specifically for clinical summarisation — it's a 20-minute conversation that's worth having before your team picks a stack.",
+      "eb_b": "Dear Dr. Mehta,\n\nI hope this message finds you well. I'm reaching out regarding Meridian Health's AI documentation initiatives.\n\nForkmark is an LLM operations platform that can support your team's AI goals with robust evaluation and version control capabilities.\n\nWe work with healthcare organisations to help them deploy AI features safely and efficiently. Our governance features may be particularly relevant given your focus on responsible AI deployment.\n\nWould you have time for a brief conversation?",
+      "cta_a": "If it's useful, I can share a one-pager on how Forkmark maps to NHS DTAC / CQC AI governance expectations — it's a document we put together for exactly this conversation. Happy to send that ahead of a call, or jump straight to 20 minutes if you'd prefer. What works best for you?",
+      "cta_b": "Please let me know if you'd be open to a 30-minute call. I look forward to hearing from you."
+    },
+    {
+      "label": "logistics-vp-ops",
+      "prospect": "Target: James Okafor, VP Operations at FastFreight (3PL/logistics, 800 employees, private equity backed). Recent trigger: FastFreight expanding into same-day delivery segment, announced new tech investment round. James posted about driver routing optimisation challenges. Our product: Forkmark for evaluating LLM-powered dispatch decision and exception handling features.",
+      "pc_a": "Prospect context: VP Ops at a PE-backed 3PL entering same-day delivery — a segment where LLM-assisted dispatch and exception handling has direct cost and NPS impact. LinkedIn post about routing optimisation shows operational mindset. PE-backed = cost efficiency and ROI framing will land better than feature-led pitch. Same-day delivery means higher stakes for LLM decision quality — a bad dispatch recommendation creates immediate SLA breach. Timing: new tech investment round means budget exists and team is evaluating tooling now.",
+      "pc_b": "Prospect is a VP of Operations at a logistics company expanding into same-day delivery. They're investing in technology.",
+      "sl_a": "Subject: Same-day dispatch decisions — how to know if your LLM is helping or hurting",
+      "sl_b": "Subject: Optimise your LLM operations with Forkmark",
+      "eb_a": "Hi James,\n\nSaw your post on routing optimisation — same-day is a different beast from standard 3PL, especially when you're scaling dispatch decision logic.\n\nHere's the problem we see when logistics teams start using LLMs for dispatch and exception handling: the model works well in test conditions, but nobody has a robust way to evaluate what happens when you update the decision logic — do edge cases get better or worse? In same-day, an edge case is a missed delivery window.\n\nForkmark gives you a structured way to A/B test your dispatch LLM logic: old version vs new version, run across your historical exception set, with automated divergence scoring and a documented sign-off before you deploy. You can see exactly which scenario types improved and which degraded before it touches live dispatch.\n\nGiven your same-day expansion, you're probably making these tooling decisions now. Worth 15 minutes to see if the evaluation layer makes sense for your stack?",
+      "eb_b": "Hi James,\n\nI hope you're well. I wanted to reach out because I believe Forkmark could add value to FastFreight's technology operations.\n\nAs you expand into same-day delivery, having robust LLM evaluation capabilities will be important for maintaining operational efficiency.\n\nForkmark helps operations teams manage and evaluate their AI features with confidence. Many logistics companies use our platform to ensure their LLM-powered features perform as expected.\n\nWould you be open to a quick call?",
+      "cta_a": "Do you have 15 minutes this week? I can run through a dispatch exception scenario specifically — takes less time to see than to explain. Thursday 2pm or Friday 10am?",
+      "cta_b": "I'd love to set up a quick demo. Please feel free to book time here: [link]"
+    },
+    {
+      "label": "media-agency-head-of-ai",
+      "prospect": "Target: Lena Fischer, Head of AI at MediaPulse Agency (digital marketing agency, 250 employees, independent). Recent trigger: MediaPulse won a major retail client (£5M account) that wants AI-generated ad copy at scale. Lena wrote a blog post about prompt consistency challenges across their content team. Our product: Forkmark for evaluating and versioning ad copy generation prompts.",
+      "pc_a": "Prospect context: Head of AI at a digital agency who has explicitly blogged about the exact problem Forkmark solves (prompt consistency) and has just won a large client that will make this problem acute. The blog post is a golden hook — she's publicly described her pain. A £5M retail client expecting AI copy at scale means she needs to prove consistency and quality to her client, not just her own team. Agency context: she needs to be able to show clients an audit trail of what prompts produced what copy — Forkmark's version history and evaluation log is a direct client deliverable.",
+      "pc_b": "Prospect is Head of AI at a digital agency with a new large client wanting AI-generated content. They've had challenges with prompt consistency.",
+      "sl_a": "Subject: Re your post on prompt consistency — what version control looks like when you have a £5M client watching",
+      "sl_b": "Subject: Improve prompt consistency at MediaPulse with Forkmark",
+      "eb_a": "Hi Lena,\n\nI read your post on prompt consistency — specifically the bit about five copywriters all getting different tones from 'the same prompt.' That's a documentation and version control problem more than it is a prompting problem.\n\nWith your new retail client expecting AI copy at scale, you're about to have this problem at a very visible level. The thing agencies often underestimate: large clients don't just want consistent copy, they want to be able to audit what produced it. If a piece of copy causes a legal review, they want to know exactly which prompt version generated it and what the approval chain was.\n\nForkmark is what that looks like in practice: every prompt version is tracked, you can run A/B comparisons across your content library to see what changed between v1 and v2, and there's a human review workflow built in. One agency we work with turned their Forkmark eval logs into a client-facing 'AI Quality Report' — their client loved it.\n\nGiven you've just landed the account and are presumably setting up the production workflow now, this is the right time to get the infrastructure right.",
+      "eb_b": "Hi Lena,\n\nI read your interesting blog post about AI prompt challenges and thought Forkmark could be very relevant for MediaPulse.\n\nOur platform provides version control and evaluation tools for LLM-generated content, which could help your team maintain consistency at scale.\n\nWith your growing AI practice, having robust tools to manage prompt quality will become increasingly important.\n\nCould we find time for a quick conversation?",
+      "cta_a": "20 minutes, and I can show you how the version history and eval log works specifically for copy generation — including what the client-facing export looks like. Are you free Thursday or Monday next week?",
+      "cta_b": "Would you be available for a 30-minute demo this week or next? Looking forward to connecting."
+    },
+    {
+      "label": "manufacturing-plant-director",
+      "prospect": "Target: Roberto Sanchez, Plant Director at PrecisionParts Manufacturing (industrial manufacturer, 600 employees, family-owned). Recent trigger: PrecisionParts publicly mentioned implementing AI-assisted quality inspection in their annual company update. Roberto has no social media presence — found via press release. Our product: Forkmark for evaluating LLM defect classification and inspection report generation.",
+      "pc_a": "Prospect context: Plant Director at a family-owned manufacturer investing in AI quality inspection — a conservative, operational audience. No social media presence means this person responds to outcomes and specifics, not trend language. Family-owned = careful ROI evaluation, long decision cycles. AI quality inspection in manufacturing has clear defect classification and report generation use cases where LLM evaluation matters for compliance (ISO, customer audit trails). Lead with: precision, compliance, and traceability — not 'AI transformation.'",
+      "pc_b": "Prospect is a Plant Director at a manufacturing company implementing AI quality inspection. They care about operational outcomes.",
+      "sl_a": "Subject: Traceability for AI-assisted quality inspection — what your auditors will ask for",
+      "sl_b": "Subject: Enhance your AI quality inspection with Forkmark",
+      "eb_a": "Dear Roberto,\n\nI saw PrecisionParts' update on your AI quality inspection implementation — a meaningful investment for a manufacturer of your size.\n\nOne thing that catches many teams off guard when deploying LLMs for defect classification: the first question from a tier-1 customer or ISO auditor isn't 'does it work?' — it's 'can you show us exactly what logic produced this inspection result, and how you know it's consistent?' That's a version control and evaluation question, not a model question.\n\nForkmark addresses this specifically: every version of your defect classification logic is tracked, you can run comparison evaluations across your defect image library before deploying changes, and the audit log gives you a documented trail of what the model was trained on and what changed between versions.\n\nFor a manufacturer supplying customers with traceability requirements, this turns the AI inspection system from a black box into something you can stand behind in an audit.\n\nI'd welcome 20 minutes to show you what the audit trail looks like in practice — no commitment, just worth understanding before your system goes into production scale.",
+      "eb_b": "Dear Roberto,\n\nI hope this email finds you well. I'm contacting you about PrecisionParts' AI quality inspection initiative.\n\nForkmark is a platform that helps manufacturing companies manage and evaluate their AI features. Our version control and evaluation capabilities could support your quality inspection programme.\n\nWe work with industrial companies to ensure their AI systems perform reliably and can be audited.\n\nWould you be interested in a brief conversation?",
+      "cta_a": "If it's useful, I can share a one-page document on what Forkmark's audit log looks like specifically for ISO 9001 quality management system contexts. Happy to send that, or talk through it in 20 minutes — whatever's most useful for where you are in your rollout.",
+      "cta_b": "Please let me know if you'd like to schedule a call. I'm happy to work around your availability."
+    },
+    {
+      "label": "legal-firm-innovation-director",
+      "prospect": "Target: Claire Watkins, Director of Innovation at Hargreaves & Stone LLP (top-20 UK law firm, 800 lawyers). Recent trigger: Hargreaves & Stone just hired 3 AI engineers according to LinkedIn. Claire presented at LegalTech London on contract review AI. Our product: Forkmark for versioning and evaluating contract review LLM prompts.",
+      "pc_a": "Prospect context: Innovation Director at a large law firm who has publicly presented on contract review AI and just made engineering hires — the infrastructure decision is imminent. Law firm context: regulatory and professional indemnity risk means every AI output needs to be attributable and auditable. The 3 AI engineer hires means she has budget and mandate. Contract review LLMs in legal have specific evaluation needs: clause classification accuracy, risk flag precision/recall. Forkmark's branch comparison and version history maps directly to the 'can we prove version X of the prompt was reviewed and approved before it processed client documents' question.",
+      "pc_b": "Prospect is an Innovation Director at a law firm building AI contract review tools. They've recently hired AI engineers.",
+      "sl_a": "Subject: Contract review AI at Hargreaves & Stone — the audit trail question your PI insurers will eventually ask",
+      "sl_b": "Subject: Support your contract review AI with Forkmark",
+      "eb_a": "Dear Claire,\n\nI saw your talk at LegalTech London — the point about making AI contract review defensible to partners and clients was exactly right.\n\nHere's the specific problem your new engineering team will hit: as they iterate on your contract clause classification prompts, there will be no systematic record of what prompt version was processing which client documents at what time. If a clause is missed and a client escalates, the question from your PI insurer won't be 'was your model accurate?' — it will be 'can you produce the version of the logic that ran on that document, and evidence that it was tested before deployment?'\n\nForkmark is version control and evaluation for LLM prompts — built for exactly this use case. Every prompt version is tracked with timestamps, you can run comparison evaluations across your clause test library (showing precision/recall change between v1 and v2), and there's a human sign-off workflow before deployment. The audit log is exportable.\n\nWith your engineering team in place and presumably building now, the infrastructure decision is coming. Worth 20 minutes to see if the version control layer fits what you're building?",
+      "eb_b": "Dear Claire,\n\nI hope you're well. I noticed Hargreaves & Stone's recent AI engineering hires and wanted to reach out about Forkmark.\n\nOur platform provides LLM version control and evaluation capabilities that could support your contract review AI development.\n\nGiven your work on AI innovation at the firm, Forkmark's features around prompt management and evaluation might be relevant to your team's needs.\n\nWould you have time for a brief call?",
+      "cta_a": "I can share a one-pager on how Forkmark maps to SRA AI guidance and PI audit trail requirements specifically — worth reading before your prompt versioning decisions are made. Or if you'd prefer to see it in 20 minutes, I'm available Thursday or Friday this week.",
+      "cta_b": "I'd be happy to arrange a demonstration. Please let me know your availability."
+    },
+    {
+      "label": "real-estate-tech-cto",
+      "prospect": "Target: Aisha Johnson, CTO at PropVision (proptech startup, 45 employees, Series A, AI property valuation). Recent trigger: PropVision's valuation model was cited in a negative press story about AI bias in property pricing. Aisha was quoted saying 'we're working on it.' Our product: Forkmark for evaluating and auditing property valuation LLM features.",
+      "pc_a": "Prospect context: CTO dealing with a live, public AI bias issue — a high-stakes, high-urgency situation. Being quoted saying 'we're working on it' means she's actively looking for solutions right now. Property valuation + AI bias = regulatory risk (FCA, Equality Act). Series A startup means she doesn't have a large team but does have immediate pressure to resolve this. The framing here is NOT 'here's a great new product' — it's 'here's a specific tool for the specific problem you told a journalist you were working on.' Speed and empathy are key.",
+      "pc_b": "Prospect is a CTO at a proptech company dealing with AI bias concerns in their valuation model.",
+      "sl_a": "Subject: Bias evaluation for property valuation LLMs — one thing that might help with what you're working on",
+      "sl_b": "Subject: Forkmark can help with your AI evaluation challenges",
+      "eb_a": "Hi Aisha,\n\nI saw the CityAM piece and your quote about working on the bias issue. I wanted to reach out because we build tooling that's directly relevant to what you're dealing with.\n\nFor LLM-based property valuation, the bias problem is fundamentally an evaluation problem: you need to be able to run your model against demographically stratified property sets and see, systematically, where divergence between protected characteristic groups exists — and then version-track what changes you made and what effect they had.\n\nForkmark gives you that: structured A/B evaluation across your property test sets, divergence scoring by segment, and a version history that lets you show 'here's where we were in Q1, here's what we changed, here's the measured improvement.' That last part matters for regulatory conversations.\n\nI don't want to oversell this — it's an evaluation layer, not a magic bias fix. But if you're iterating on your valuation model right now, having the measurement infrastructure in place will make the conversation with your investors and regulators significantly easier.\n\nWorth 20 minutes?",
+      "eb_b": "Hi Aisha,\n\nI hope you're having a good week. I wanted to reach out about Forkmark and how it might help PropVision with your AI evaluation needs.\n\nOur platform provides version control and evaluation capabilities for LLM features that could support your team's ongoing work.\n\nMany AI companies use Forkmark to evaluate and improve their models systematically.\n\nWould you be interested in a quick call?",
+      "cta_a": "Are you free for 20 minutes this week? I can walk you through how to set up demographic stratification in the evaluation — takes about 15 minutes to see and is directly relevant to what you're dealing with right now.",
+      "cta_b": "Please let me know if you'd like to learn more. Happy to arrange a call at your convenience."
+    },
+    {
+      "label": "edtech-head-of-product",
+      "prospect": "Target: Tom Adeyemi, Head of Product at LearnFlow (edtech, 80 employees, Series A, adaptive learning platform). Recent trigger: LearnFlow raised Series A, blog post announcing AI-powered personalised learning paths. Tom commented on a LinkedIn post about LLM hallucination risks in education. Our product: Forkmark for evaluating AI tutoring and content generation LLMs.",
+      "pc_a": "Prospect context: Head of Product at an edtech company that has just publicly committed to AI personalisation and is visibly concerned about hallucination risk — a direct overlap with Forkmark's evaluation value prop. Education context: hallucination in a tutoring LLM has direct learner harm implications, which makes evaluation not optional. Series A means money for tooling decisions. The LinkedIn comment about hallucination risk shows he's already thought about this — he's receptive to 'here's how to measure it' framing rather than needing to be convinced it's a problem.",
+      "pc_b": "Prospect is Head of Product at an edtech company using AI for personalised learning. They've expressed concern about LLM hallucinations.",
+      "sl_a": "Subject: Measuring hallucination risk in tutoring LLMs — what evaluation looks like in practice",
+      "sl_b": "Subject: Support LearnFlow's AI learning features with Forkmark",
+      "eb_a": "Hi Tom,\n\nI saw your comment on the hallucination risk post — you're right that it's particularly acute in education. A factual error in a financial news summary is annoying; a factual error in a tutoring explanation a student trusts and then repeats in an exam is a different level of problem.\n\nThe challenge for teams building AI learning features isn't usually the first version — it's iteration. Every time you update a tutoring prompt to improve engagement or adjust difficulty, you need to know: did this change introduce new factual errors or regression on the previous test set? Without systematic evaluation, you're shipping on instinct.\n\nForkmark gives you the evaluation layer: A/B comparison of old vs new prompt version across your content test set, factual consistency scoring, and a human review workflow before deployment. You can set up a hallucination evaluation that runs against a reference answer set for your curriculum area.\n\nWith your Series A and AI personalisation roadmap, you're making prompt infrastructure decisions now. Worth 20 minutes to see what the evaluation setup looks like for a tutoring use case?",
+      "eb_b": "Hi Tom,\n\nI wanted to reach out about LearnFlow's AI initiatives and how Forkmark might be able to help.\n\nOur platform offers LLM evaluation and version control tools that can help your team manage AI feature quality. This could be particularly relevant given your focus on responsible AI in education.\n\nMany product teams use Forkmark to ensure their AI features meet quality standards before deployment.\n\nWould you be open to a brief conversation?",
+      "cta_a": "20 minutes this week — I can walk you through how to set up a curriculum-grounded factual consistency evaluation. Does Wednesday or Thursday afternoon work?",
+      "cta_b": "I'd love to chat more about this. Please let me know your availability for a quick call."
+    },
+    {
+      "label": "restaurant-chain-cdo",
+      "prospect": "Target: Michelle Park, CDO at TasteBite Group (restaurant chain, 120 locations, 2,000 employees). Recent trigger: TasteBite announced AI-powered menu personalisation and upselling recommendations across their ordering kiosks. Michelle presented at a food industry conference on digital transformation. Our product: Forkmark for evaluating menu recommendation and upselling LLM features.",
+      "pc_a": "Prospect context: CDO of a mid-size restaurant chain deploying AI at 120 locations via ordering kiosks — a high-volume, high-visibility deployment where recommendation quality has direct revenue and customer experience impact. Conference presentation on digital transformation means she's comfortable discussing technology strategy publicly. Restaurant/food context: dietary restriction handling in LLM recommendations has liability implications. 120 locations means any regression in recommendation logic is immediately visible in revenue data. Value prop: systematic evaluation before you push a prompt change to 120 kiosks.",
+      "pc_b": "Prospect is a CDO at a restaurant chain deploying AI for menu recommendations. They're running this at 120 locations.",
+      "sl_a": "Subject: Before you push a prompt update to 120 kiosks — what evaluation looks like at that scale",
+      "sl_b": "Subject: Improve your AI menu recommendations with Forkmark",
+      "eb_a": "Hi Michelle,\n\nI saw TasteBite's announcement on the AI kiosk recommendations — 120 locations is a meaningful deployment.\n\nHere's the risk that catches restaurant groups off guard at that scale: when your team improves the recommendation logic and pushes an update, the effect is immediate and everywhere. A prompt change that performs better for 80% of queries but degrades handling of dietary restriction queries (vegan, allergen) lands in 120 locations simultaneously.\n\nForkmark gives you the evaluation layer before the push: run your old recommendation logic and new logic side-by-side across your query test set (including dietary edge cases), see the divergence, and get sign-off before it goes to production. One version, tested. Not discovered in location 47's complaint queue.\n\nGiven you're presumably iterating on recommendation logic as you learn from real ordering data, having the evaluation infrastructure in place now — rather than after a high-profile incident — seems worth 20 minutes of conversation.",
+      "eb_b": "Hi Michelle,\n\nI hope you're doing well. I wanted to reach out about TasteBite's AI menu recommendation initiative.\n\nForkmark provides LLM evaluation and version control tools that could help your team ensure recommendation quality across your locations.\n\nOur platform is used by companies running AI features at scale to maintain quality and consistency.\n\nWould you be interested in a quick call to learn more?",
+      "cta_a": "20 minutes — I can walk you through how the dietary restriction edge case evaluation works specifically, including how teams set up their query test sets. Does next Tuesday or Wednesday work?",
+      "cta_b": "Please let me know if you'd like to schedule a call. I look forward to hearing from you."
+    }
+  ],
+  "input_field": "prospect",
+  "step_field_map": {
+    "prospect_context": [
+      "pc_a",
+      "pc_b"
+    ],
+    "subject_line": [
+      "sl_a",
+      "sl_b"
+    ],
+    "email_body": [
+      "eb_a",
+      "eb_b"
+    ],
+    "call_to_action": [
+      "cta_a",
+      "cta_b"
+    ]
+  }
+}

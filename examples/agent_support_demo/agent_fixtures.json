@@ -1,0 +1,371 @@
+{
+  "demo_name": "agent_support",
+  "display_name": "Support Agent — Escalation vs RAG Resolution",
+  "demo_type": "agent",
+  "workflow": {
+    "name": "support-agent-comparison",
+    "description": "Compare two customer support agent strategies: an escalation-first approach that quickly routes to human agents vs a RAG-powered resolution strategy that attempts automated resolution using knowledge base retrieval and sub-agent delegation. Showcases nested tool calls, sub-agent patterns, and the efficiency vs resolution quality tradeoff."
+  },
+  "eval_run": {
+    "name": "Escalation-First vs RAG Resolution — Customer Support",
+    "description": "The escalation strategy minimizes AI handling time but increases human agent load. The RAG resolution strategy uses more tool calls and sub-agents but resolves tickets without escalation. Demonstrates how higher upfront cost can reduce total cost of resolution."
+  },
+  "branch_a": {
+    "label": "Escalation-First (Baseline)",
+    "name": "escalation-first",
+    "model_id": "gpt-4o",
+    "temperature": 0.2,
+    "is_baseline": true
+  },
+  "branch_b": {
+    "label": "RAG Resolution (Challenger)",
+    "name": "rag-resolution",
+    "model_id": "gpt-4o",
+    "temperature": 0.2,
+    "is_baseline": false
+  },
+  "cases": [
+    {
+      "label": "billing-dispute-refund",
+      "input": "Customer says: I was charged twice for my subscription last month. Order #ORD-28441. I want a refund for the duplicate charge immediately.",
+      "trace_a": [
+        {
+          "event_type": "reasoning",
+          "name": "classify_intent",
+          "output_data": {"text": "Customer has a billing dispute — duplicate charge. This is a financial issue that requires account access. Routing to billing team."},
+          "latency_ms": 280,
+          "tokens_input": 150,
+          "tokens_output": 40,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "tool_call",
+          "name": "classify_ticket",
+          "input_data": {"text": "duplicate charge refund", "categories": ["billing", "technical", "account", "general"]},
+          "output_data": {"category": "billing", "confidence": 0.95, "priority": "high"},
+          "latency_ms": 180,
+          "tokens_input": 80,
+          "tokens_output": 30,
+          "cost_usd": 0.001
+        },
+        {
+          "event_type": "tool_call",
+          "name": "escalate_to_human",
+          "input_data": {"team": "billing", "priority": "high", "summary": "Duplicate subscription charge on ORD-28441, customer requesting refund"},
+          "output_data": {"ticket_id": "ESC-1892", "assigned_to": "billing-team-queue", "eta_minutes": 15},
+          "latency_ms": 120,
+          "tokens_input": 60,
+          "tokens_output": 25,
+          "cost_usd": 0.001
+        },
+        {
+          "event_type": "reasoning",
+          "name": "compose_response",
+          "output_data": {"text": "Ticket escalated to billing. Composing response to customer with escalation confirmation and ETA."},
+          "latency_ms": 350,
+          "tokens_input": 280,
+          "tokens_output": 120,
+          "cost_usd": 0.003
+        }
+      ],
+      "trace_b": [
+        {
+          "event_type": "reasoning",
+          "name": "classify_and_plan",
+          "output_data": {"text": "Billing dispute for duplicate charge. Before escalating, I should verify the charge in our system and check if an automated refund is possible. Plan: 1) Look up order, 2) Check for duplicates, 3) Process refund if confirmed, 4) Respond to customer."},
+          "latency_ms": 420,
+          "tokens_input": 150,
+          "tokens_output": 80,
+          "cost_usd": 0.004
+        },
+        {
+          "event_type": "tool_call",
+          "name": "lookup_order",
+          "input_data": {"order_id": "ORD-28441"},
+          "output_data": {"order_id": "ORD-28441", "amount": 29.99, "date": "2024-11-01", "status": "completed", "subscription": "pro-monthly"},
+          "latency_ms": 95,
+          "tokens_input": 30,
+          "tokens_output": 50,
+          "cost_usd": 0.001
+        },
+        {
+          "event_type": "tool_call",
+          "name": "query_payment_history",
+          "input_data": {"customer_id": "cust_28441", "date_range": "2024-10-01:2024-11-30", "filter": "subscription"},
+          "output_data": {"charges": [{"amount": 29.99, "date": "2024-11-01", "id": "ch_a1"}, {"amount": 29.99, "date": "2024-11-01", "id": "ch_a2"}], "duplicate_detected": true},
+          "latency_ms": 130,
+          "tokens_input": 50,
+          "tokens_output": 80,
+          "cost_usd": 0.001
+        },
+        {
+          "event_type": "reasoning",
+          "name": "confirm_duplicate",
+          "output_data": {"text": "Confirmed: two charges of $29.99 on 2024-11-01 for the same subscription. Charge ch_a2 is the duplicate. I can process an automated refund since this is a clear system duplicate under $100."},
+          "latency_ms": 310,
+          "tokens_input": 380,
+          "tokens_output": 65,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "sub_agent",
+          "name": "refund_processor",
+          "input_data": {"task": "Process refund for duplicate charge ch_a2"},
+          "output_data": {"refund_id": "ref_7721", "amount": 29.99, "status": "processed", "eta_days": 3},
+          "latency_ms": 450,
+          "tokens_input": 120,
+          "tokens_output": 90,
+          "cost_usd": 0.003,
+          "children": [
+            {
+              "event_type": "tool_call",
+              "name": "check_refund_eligibility",
+              "input_data": {"charge_id": "ch_a2", "reason": "duplicate_charge"},
+              "output_data": {"eligible": true, "auto_approve": true, "policy": "auto-refund-duplicate-under-100"},
+              "latency_ms": 85,
+              "tokens_input": 40,
+              "tokens_output": 35,
+              "cost_usd": 0.001
+            },
+            {
+              "event_type": "tool_call",
+              "name": "process_refund",
+              "input_data": {"charge_id": "ch_a2", "amount": 29.99, "reason": "duplicate_charge"},
+              "output_data": {"refund_id": "ref_7721", "status": "processed"},
+              "latency_ms": 200,
+              "tokens_input": 45,
+              "tokens_output": 30,
+              "cost_usd": 0.001
+            },
+            {
+              "event_type": "reasoning",
+              "name": "verify_refund",
+              "output_data": {"text": "Refund ref_7721 processed successfully for $29.99. Customer should see it in 3-5 business days."},
+              "latency_ms": 140,
+              "tokens_input": 100,
+              "tokens_output": 30,
+              "cost_usd": 0.001
+            }
+          ]
+        },
+        {
+          "event_type": "reasoning",
+          "name": "compose_response",
+          "output_data": {"text": "Refund processed. Composing response with refund confirmation, amount, reference number, and expected timeline. No escalation needed."},
+          "latency_ms": 380,
+          "tokens_input": 520,
+          "tokens_output": 150,
+          "cost_usd": 0.004
+        }
+      ]
+    },
+    {
+      "label": "password-reset-mfa",
+      "input": "Customer says: I can't log in to my account. I changed my phone number and now the 2FA code goes to my old number. My email is sarah.k@example.com.",
+      "trace_a": [
+        {
+          "event_type": "reasoning",
+          "name": "classify_intent",
+          "output_data": {"text": "Account access issue involving MFA/2FA recovery. This requires identity verification and security team involvement. Escalating."},
+          "latency_ms": 260,
+          "tokens_input": 145,
+          "tokens_output": 38,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "tool_call",
+          "name": "classify_ticket",
+          "input_data": {"text": "MFA 2FA phone number change account locked", "categories": ["billing", "technical", "account", "security"]},
+          "output_data": {"category": "security", "confidence": 0.92, "priority": "high"},
+          "latency_ms": 170,
+          "tokens_input": 75,
+          "tokens_output": 28,
+          "cost_usd": 0.001
+        },
+        {
+          "event_type": "tool_call",
+          "name": "escalate_to_human",
+          "input_data": {"team": "security", "priority": "high", "summary": "Customer locked out due to MFA on old phone number. Email: sarah.k@example.com. Needs MFA reset."},
+          "output_data": {"ticket_id": "ESC-1893", "assigned_to": "security-team-queue", "eta_minutes": 30},
+          "latency_ms": 110,
+          "tokens_input": 65,
+          "tokens_output": 25,
+          "cost_usd": 0.001
+        },
+        {
+          "event_type": "reasoning",
+          "name": "compose_response",
+          "output_data": {"text": "Security escalation created. Response includes ticket number, security team ETA, and what to expect during identity verification."},
+          "latency_ms": 320,
+          "tokens_input": 260,
+          "tokens_output": 110,
+          "cost_usd": 0.003
+        }
+      ],
+      "trace_b": [
+        {
+          "event_type": "reasoning",
+          "name": "classify_and_plan",
+          "output_data": {"text": "Account locked due to MFA on old phone. Plan: 1) Verify account exists, 2) Check if backup recovery methods exist, 3) If backup method available, initiate recovery flow, 4) If not, escalate to security with pre-verified context."},
+          "latency_ms": 400,
+          "tokens_input": 145,
+          "tokens_output": 75,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "tool_call",
+          "name": "lookup_account",
+          "input_data": {"email": "sarah.k@example.com"},
+          "output_data": {"account_id": "acct_sk_991", "name": "Sarah K.", "mfa_methods": ["sms", "email_backup"], "email_verified": true},
+          "latency_ms": 90,
+          "tokens_input": 35,
+          "tokens_output": 55,
+          "cost_usd": 0.001
+        },
+        {
+          "event_type": "reasoning",
+          "name": "evaluate_recovery_options",
+          "output_data": {"text": "Account has email_backup as a secondary MFA method. Since their email is verified, I can initiate an email-based MFA recovery without escalation to security."},
+          "latency_ms": 280,
+          "tokens_input": 310,
+          "tokens_output": 50,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "sub_agent",
+          "name": "mfa_recovery_agent",
+          "input_data": {"task": "Initiate email-based MFA recovery for acct_sk_991"},
+          "output_data": {"recovery_initiated": true, "method": "email_backup", "link_sent": true},
+          "latency_ms": 380,
+          "tokens_input": 100,
+          "tokens_output": 70,
+          "cost_usd": 0.002,
+          "children": [
+            {
+              "event_type": "tool_call",
+              "name": "check_recovery_policy",
+              "input_data": {"account_id": "acct_sk_991", "recovery_method": "email_backup"},
+              "output_data": {"allowed": true, "requires_identity_check": false, "cooldown_hours": 0},
+              "latency_ms": 75,
+              "tokens_input": 40,
+              "tokens_output": 30,
+              "cost_usd": 0.001
+            },
+            {
+              "event_type": "tool_call",
+              "name": "send_recovery_email",
+              "input_data": {"account_id": "acct_sk_991", "email": "sarah.k@example.com", "action": "mfa_reset_link"},
+              "output_data": {"sent": true, "expires_in_minutes": 30},
+              "latency_ms": 160,
+              "tokens_input": 45,
+              "tokens_output": 25,
+              "cost_usd": 0.001
+            }
+          ]
+        },
+        {
+          "event_type": "reasoning",
+          "name": "compose_response",
+          "output_data": {"text": "Recovery email sent. Composing response with instructions to check email for MFA reset link. No escalation to security needed — resolved via backup recovery method."},
+          "latency_ms": 360,
+          "tokens_input": 480,
+          "tokens_output": 140,
+          "cost_usd": 0.004
+        }
+      ]
+    },
+    {
+      "label": "feature-request-api",
+      "input": "Customer says: Your API doesn't support batch operations for the /users endpoint. We're processing 10K users daily and making individual calls is killing our rate limits. When will you add batch support?",
+      "trace_a": [
+        {
+          "event_type": "reasoning",
+          "name": "classify_intent",
+          "output_data": {"text": "This is a feature request for batch API operations. Not a bug or billing issue. Route to product team."},
+          "latency_ms": 250,
+          "tokens_input": 160,
+          "tokens_output": 35,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "tool_call",
+          "name": "classify_ticket",
+          "input_data": {"text": "API batch operations feature request rate limits", "categories": ["billing", "technical", "feature_request", "general"]},
+          "output_data": {"category": "feature_request", "confidence": 0.88, "priority": "medium"},
+          "latency_ms": 175,
+          "tokens_input": 75,
+          "tokens_output": 28,
+          "cost_usd": 0.001
+        },
+        {
+          "event_type": "tool_call",
+          "name": "escalate_to_human",
+          "input_data": {"team": "product", "priority": "medium", "summary": "Customer requesting batch API support for /users endpoint. Processing 10K users/day, hitting rate limits."},
+          "output_data": {"ticket_id": "ESC-1894", "assigned_to": "product-feedback-queue", "eta_minutes": 60},
+          "latency_ms": 115,
+          "tokens_input": 65,
+          "tokens_output": 25,
+          "cost_usd": 0.001
+        },
+        {
+          "event_type": "reasoning",
+          "name": "compose_response",
+          "output_data": {"text": "Feature request logged. Composing response acknowledging the need and providing product team ticket reference."},
+          "latency_ms": 340,
+          "tokens_input": 270,
+          "tokens_output": 115,
+          "cost_usd": 0.003
+        }
+      ],
+      "trace_b": [
+        {
+          "event_type": "reasoning",
+          "name": "classify_and_plan",
+          "output_data": {"text": "Feature request for batch API. Before escalating, let me check: 1) Is there an existing batch endpoint or workaround? 2) Is this on the public roadmap? 3) Can I suggest interim solutions?"},
+          "latency_ms": 380,
+          "tokens_input": 160,
+          "tokens_output": 70,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "tool_call",
+          "name": "search_knowledge_base",
+          "input_data": {"query": "batch operations /users endpoint API bulk import"},
+          "output_data": {"results": [{"title": "API Bulk Operations", "content": "The /users/import endpoint supports CSV batch imports up to 5K records. Rate limit: 10 requests/minute with 5K records each = 50K users/10min."}]},
+          "latency_ms": 140,
+          "tokens_input": 45,
+          "tokens_output": 90,
+          "cost_usd": 0.001
+        },
+        {
+          "event_type": "reasoning",
+          "name": "evaluate_workaround",
+          "output_data": {"text": "There's an existing /users/import endpoint that does CSV batch imports up to 5K records per call. This would solve the customer's 10K daily use case with just 2 API calls instead of 10K. Let me also check the roadmap."},
+          "latency_ms": 310,
+          "tokens_input": 370,
+          "tokens_output": 60,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "tool_call",
+          "name": "search_knowledge_base",
+          "input_data": {"query": "roadmap batch API JSON endpoint Q1 2025"},
+          "output_data": {"results": [{"title": "Q1 2025 API Roadmap", "content": "JSON batch endpoint for /users planned for Q1 2025 release. Currently in design phase."}]},
+          "latency_ms": 130,
+          "tokens_input": 45,
+          "tokens_output": 70,
+          "cost_usd": 0.001
+        },
+        {
+          "event_type": "reasoning",
+          "name": "compose_response",
+          "output_data": {"text": "Found both an immediate workaround (CSV import endpoint) and roadmap info (JSON batch in Q1 2025). Customer can be unblocked today with the existing import endpoint while the native batch endpoint is in development. No escalation needed."},
+          "latency_ms": 420,
+          "tokens_input": 510,
+          "tokens_output": 180,
+          "cost_usd": 0.005
+        }
+      ]
+    }
+  ]
+}

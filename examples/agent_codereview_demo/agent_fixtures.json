@@ -1,0 +1,359 @@
+{
+  "demo_name": "agent_codereview",
+  "display_name": "Code Review Agent — Single-Pass vs Multi-Pass",
+  "demo_type": "agent",
+  "workflow": {
+    "name": "codereview-agent-comparison",
+    "description": "Compare two code review agent strategies: a single-pass holistic review vs a multi-pass strategy that runs specialized sub-agents for linting, security scanning, logic analysis, and final summarization. Demonstrates deep nesting, sub_agent event types, and the quality-vs-cost tradeoff where the more expensive approach catches more issues."
+  },
+  "eval_run": {
+    "name": "Single-Pass vs Multi-Pass — Code Review Quality",
+    "description": "The single-pass strategy reads the diff once and produces a review. The multi-pass strategy delegates to specialized sub-agents (linter, security scanner, logic reviewer) then synthesizes. Multi-pass costs more but catches security and edge-case issues the single-pass misses."
+  },
+  "branch_a": {
+    "label": "Single-Pass Review (Baseline)",
+    "name": "single-pass-holistic",
+    "model_id": "gpt-4o",
+    "temperature": 0.1,
+    "is_baseline": true
+  },
+  "branch_b": {
+    "label": "Multi-Pass Review (Challenger)",
+    "name": "multi-pass-specialized",
+    "model_id": "gpt-4o",
+    "temperature": 0.1,
+    "is_baseline": false
+  },
+  "cases": [
+    {
+      "label": "auth-middleware-pr",
+      "input": "Review PR #347: Add JWT authentication middleware to the Express API. Changes: new auth.js middleware, route protection for /api/users and /api/admin, token refresh endpoint.",
+      "trace_a": [
+        {
+          "event_type": "reasoning",
+          "name": "understand_pr",
+          "output_data": {"text": "PR adds JWT auth middleware to Express. I'll review the diff holistically for correctness, style, and common auth pitfalls."},
+          "latency_ms": 380,
+          "tokens_input": 200,
+          "tokens_output": 50,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "tool_call",
+          "name": "read_diff",
+          "input_data": {"pr_number": 347},
+          "output_data": {"files_changed": 4, "additions": 187, "deletions": 12, "diff_summary": "auth.js (new), routes/users.js (modified), routes/admin.js (modified), config.js (modified)"},
+          "latency_ms": 150,
+          "tokens_input": 30,
+          "tokens_output": 180,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "reasoning",
+          "name": "review_analysis",
+          "output_data": {"text": "Reviewing all changes together. Found: generally clean implementation, good use of express middleware pattern. Suggestions: add rate limiting to token refresh, consider using httpOnly cookies instead of localStorage for token storage, add input validation on login endpoint."},
+          "latency_ms": 1200,
+          "tokens_input": 850,
+          "tokens_output": 420,
+          "cost_usd": 0.012
+        },
+        {
+          "event_type": "reasoning",
+          "name": "compose_review",
+          "output_data": {"text": "Composing review with 3 suggestions. Approve with minor comments. No blocking issues identified."},
+          "latency_ms": 580,
+          "tokens_input": 1100,
+          "tokens_output": 350,
+          "cost_usd": 0.009
+        }
+      ],
+      "trace_b": [
+        {
+          "event_type": "reasoning",
+          "name": "plan_review",
+          "output_data": {"text": "JWT auth PR requires careful multi-pass review. Plan:\n1. Lint pass: style, naming, structure\n2. Security pass: auth-specific vulnerabilities\n3. Logic pass: correctness, edge cases\n4. Synthesize findings into final review"},
+          "latency_ms": 450,
+          "tokens_input": 200,
+          "tokens_output": 85,
+          "cost_usd": 0.004
+        },
+        {
+          "event_type": "tool_call",
+          "name": "read_diff",
+          "input_data": {"pr_number": 347},
+          "output_data": {"files_changed": 4, "additions": 187, "deletions": 12, "diff_summary": "auth.js (new), routes/users.js (modified), routes/admin.js (modified), config.js (modified)"},
+          "latency_ms": 150,
+          "tokens_input": 30,
+          "tokens_output": 180,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "sub_agent",
+          "name": "lint_reviewer",
+          "input_data": {"task": "Review code style, naming conventions, and structure of the JWT auth PR"},
+          "output_data": {"issues": 2, "findings": ["Inconsistent error message format in auth.js", "Missing JSDoc on exported middleware function"]},
+          "latency_ms": 620,
+          "tokens_input": 400,
+          "tokens_output": 180,
+          "cost_usd": 0.005,
+          "children": [
+            {
+              "event_type": "tool_call",
+              "name": "run_linter",
+              "input_data": {"files": ["auth.js"], "config": "eslint-recommended"},
+              "output_data": {"warnings": 2, "errors": 0, "details": ["no-unused-vars: refreshToken callback param", "consistent-return: missing return in error branch"]},
+              "latency_ms": 200,
+              "tokens_input": 50,
+              "tokens_output": 60,
+              "cost_usd": 0.001
+            },
+            {
+              "event_type": "reasoning",
+              "name": "lint_analysis",
+              "output_data": {"text": "Two style issues found: inconsistent error messages (some use objects, others strings) and missing JSDoc on the exported verifyToken function."},
+              "latency_ms": 280,
+              "tokens_input": 250,
+              "tokens_output": 80,
+              "cost_usd": 0.002
+            }
+          ]
+        },
+        {
+          "event_type": "sub_agent",
+          "name": "security_reviewer",
+          "input_data": {"task": "Security audit of JWT auth middleware — check for common auth vulnerabilities"},
+          "output_data": {"issues": 4, "severity": "high", "findings": ["JWT secret in config.js not from env var", "No token expiry validation", "Missing CSRF protection on refresh endpoint", "Token stored in localStorage — XSS vulnerability"]},
+          "latency_ms": 950,
+          "tokens_input": 450,
+          "tokens_output": 320,
+          "cost_usd": 0.008,
+          "children": [
+            {
+              "event_type": "tool_call",
+              "name": "security_scan",
+              "input_data": {"files": ["auth.js", "config.js"], "rules": ["jwt-best-practices", "owasp-top-10"]},
+              "output_data": {"critical": 1, "high": 2, "medium": 1, "details": ["CRITICAL: JWT_SECRET hardcoded in config.js", "HIGH: No exp claim validation", "HIGH: No CSRF on state-changing /refresh", "MEDIUM: localStorage token storage"]},
+              "latency_ms": 350,
+              "tokens_input": 60,
+              "tokens_output": 120,
+              "cost_usd": 0.002
+            },
+            {
+              "event_type": "reasoning",
+              "name": "security_analysis",
+              "output_data": {"text": "Four security issues found, one critical. The hardcoded JWT secret is a deployment blocker. Token expiry and CSRF protections are high-priority fixes. localStorage vs httpOnly cookie is a design discussion."},
+              "latency_ms": 380,
+              "tokens_input": 350,
+              "tokens_output": 110,
+              "cost_usd": 0.003
+            }
+          ]
+        },
+        {
+          "event_type": "sub_agent",
+          "name": "logic_reviewer",
+          "input_data": {"task": "Review business logic correctness and edge cases in JWT auth flow"},
+          "output_data": {"issues": 3, "findings": ["Race condition on concurrent token refresh", "No handling of clock skew in token validation", "Admin route protection checks role but not token validity first"]},
+          "latency_ms": 780,
+          "tokens_input": 420,
+          "tokens_output": 250,
+          "cost_usd": 0.006,
+          "children": [
+            {
+              "event_type": "reasoning",
+              "name": "trace_auth_flow",
+              "output_data": {"text": "Tracing the authentication flow: login → token issued → middleware validates → refresh flow. Checking each transition for correctness."},
+              "latency_ms": 320,
+              "tokens_input": 300,
+              "tokens_output": 70,
+              "cost_usd": 0.002
+            },
+            {
+              "event_type": "reasoning",
+              "name": "edge_case_analysis",
+              "output_data": {"text": "Three logic issues: 1) Concurrent refresh requests could issue multiple new tokens (race condition), 2) No clock skew tolerance — tokens may fail validation across server instances, 3) Admin middleware checks req.user.role before checking if token is valid at all."},
+              "latency_ms": 400,
+              "tokens_input": 420,
+              "tokens_output": 140,
+              "cost_usd": 0.004
+            }
+          ]
+        },
+        {
+          "event_type": "reasoning",
+          "name": "synthesize_review",
+          "output_data": {"text": "Combining findings from all three passes. Total: 9 issues (1 critical, 2 high, 3 medium, 3 low). The single-pass approach would have caught ~3 of these. Recommending: request changes, with the JWT secret and token expiry as blocking issues."},
+          "latency_ms": 850,
+          "tokens_input": 1200,
+          "tokens_output": 480,
+          "cost_usd": 0.012
+        }
+      ]
+    },
+    {
+      "label": "database-migration-pr",
+      "input": "Review PR #412: Add user_preferences table and migration script. Adds a new table with JSON column for preferences, migration to create it, and API endpoints to read/write preferences.",
+      "trace_a": [
+        {
+          "event_type": "reasoning",
+          "name": "understand_pr",
+          "output_data": {"text": "DB migration PR adding a user preferences table with JSON storage. Reviewing for migration safety, schema design, and API correctness."},
+          "latency_ms": 340,
+          "tokens_input": 185,
+          "tokens_output": 45,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "tool_call",
+          "name": "read_diff",
+          "input_data": {"pr_number": 412},
+          "output_data": {"files_changed": 3, "additions": 95, "deletions": 2, "diff_summary": "migrations/005_user_prefs.sql (new), models/preferences.py (new), routes/preferences.py (new)"},
+          "latency_ms": 140,
+          "tokens_input": 28,
+          "tokens_output": 160,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "reasoning",
+          "name": "review_analysis",
+          "output_data": {"text": "Review of migration and endpoints. Clean implementation. Suggestions: add an index on user_id for the preferences table, consider adding a size limit on the JSON column to prevent abuse, add NOT NULL constraint on user_id."},
+          "latency_ms": 980,
+          "tokens_input": 720,
+          "tokens_output": 380,
+          "cost_usd": 0.010
+        },
+        {
+          "event_type": "reasoning",
+          "name": "compose_review",
+          "output_data": {"text": "Composing review with 3 suggestions. Approve with suggestions. Migration is safe, endpoints are correct."},
+          "latency_ms": 520,
+          "tokens_input": 950,
+          "tokens_output": 300,
+          "cost_usd": 0.008
+        }
+      ],
+      "trace_b": [
+        {
+          "event_type": "reasoning",
+          "name": "plan_review",
+          "output_data": {"text": "Database migration PR needs careful review. Plan:\n1. Lint: SQL style, Python code quality\n2. Security: SQL injection, input validation, authorization\n3. Logic: migration safety, rollback strategy, data integrity\n4. Synthesize"},
+          "latency_ms": 420,
+          "tokens_input": 185,
+          "tokens_output": 80,
+          "cost_usd": 0.004
+        },
+        {
+          "event_type": "tool_call",
+          "name": "read_diff",
+          "input_data": {"pr_number": 412},
+          "output_data": {"files_changed": 3, "additions": 95, "deletions": 2, "diff_summary": "migrations/005_user_prefs.sql (new), models/preferences.py (new), routes/preferences.py (new)"},
+          "latency_ms": 140,
+          "tokens_input": 28,
+          "tokens_output": 160,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "sub_agent",
+          "name": "lint_reviewer",
+          "input_data": {"task": "Review SQL migration style and Python code quality"},
+          "output_data": {"issues": 1, "findings": ["Migration SQL uses implicit column order in INSERT — should be explicit"]},
+          "latency_ms": 480,
+          "tokens_input": 320,
+          "tokens_output": 120,
+          "cost_usd": 0.004,
+          "children": [
+            {
+              "event_type": "tool_call",
+              "name": "run_linter",
+              "input_data": {"files": ["models/preferences.py", "routes/preferences.py"], "config": "pylint"},
+              "output_data": {"warnings": 1, "errors": 0, "details": ["missing-function-docstring in update_preferences()"]},
+              "latency_ms": 180,
+              "tokens_input": 45,
+              "tokens_output": 50,
+              "cost_usd": 0.001
+            },
+            {
+              "event_type": "reasoning",
+              "name": "sql_style_check",
+              "output_data": {"text": "Migration SQL is acceptable but uses implicit column ordering. One Python docstring missing."},
+              "latency_ms": 200,
+              "tokens_input": 220,
+              "tokens_output": 50,
+              "cost_usd": 0.002
+            }
+          ]
+        },
+        {
+          "event_type": "sub_agent",
+          "name": "security_reviewer",
+          "input_data": {"task": "Security audit of preferences API — check for injection, auth, data exposure"},
+          "output_data": {"issues": 3, "severity": "high", "findings": ["No authorization check — any user can read/write other users' preferences", "JSON input not validated — potential for oversized payloads", "No rate limiting on write endpoint"]},
+          "latency_ms": 720,
+          "tokens_input": 380,
+          "tokens_output": 250,
+          "cost_usd": 0.006,
+          "children": [
+            {
+              "event_type": "tool_call",
+              "name": "security_scan",
+              "input_data": {"files": ["routes/preferences.py"], "rules": ["authorization", "input-validation", "owasp-api"]},
+              "output_data": {"critical": 1, "high": 1, "medium": 1, "details": ["CRITICAL: Missing ownership check on user_id parameter", "HIGH: No payload size limit on JSON body", "MEDIUM: No rate limiting"]},
+              "latency_ms": 280,
+              "tokens_input": 55,
+              "tokens_output": 100,
+              "cost_usd": 0.002
+            },
+            {
+              "event_type": "reasoning",
+              "name": "auth_analysis",
+              "output_data": {"text": "Critical: The PUT /preferences/:userId endpoint doesn't verify that the authenticated user matches the userId parameter. Any authenticated user can overwrite anyone else's preferences. This is an IDOR vulnerability."},
+              "latency_ms": 320,
+              "tokens_input": 310,
+              "tokens_output": 90,
+              "cost_usd": 0.003
+            }
+          ]
+        },
+        {
+          "event_type": "sub_agent",
+          "name": "logic_reviewer",
+          "input_data": {"task": "Review migration safety, rollback strategy, and data integrity for user_preferences table"},
+          "output_data": {"issues": 3, "findings": ["No rollback migration (down script)", "Missing index on user_id FK", "No default value for preferences column — NULL on insert"]},
+          "latency_ms": 650,
+          "tokens_input": 360,
+          "tokens_output": 200,
+          "cost_usd": 0.005,
+          "children": [
+            {
+              "event_type": "reasoning",
+              "name": "migration_safety",
+              "output_data": {"text": "Migration creates table but has no down/rollback script. In production, every migration should be reversible. Also missing the index on user_id which will be needed for the FK lookup."},
+              "latency_ms": 350,
+              "tokens_input": 280,
+              "tokens_output": 100,
+              "cost_usd": 0.003
+            },
+            {
+              "event_type": "reasoning",
+              "name": "integrity_check",
+              "output_data": {"text": "No default value for the JSON preferences column. If application code doesn't always supply a value, rows with NULL preferences will cause runtime errors in the API endpoint."},
+              "latency_ms": 240,
+              "tokens_input": 320,
+              "tokens_output": 70,
+              "cost_usd": 0.002
+            }
+          ]
+        },
+        {
+          "event_type": "reasoning",
+          "name": "synthesize_review",
+          "output_data": {"text": "Multi-pass found 7 issues total (1 critical IDOR, 2 high, 2 medium, 2 low). The IDOR vulnerability is a blocking issue — single-pass would likely miss it since it requires tracing the auth flow across files. Recommending: request changes."},
+          "latency_ms": 900,
+          "tokens_input": 1100,
+          "tokens_output": 450,
+          "cost_usd": 0.011
+        }
+      ]
+    }
+  ]
+}

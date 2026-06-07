@@ -1,0 +1,343 @@
+{
+  "demo_name": "model_migration",
+  "display_name": "Model Migration",
+  "workflow": {
+    "name": "product-content-pipeline",
+    "description": "StyleForge Commerce product content generation pipeline. Transforms raw supplier product data into publish-ready titles, descriptions, and SEO meta fields using an LLM."
+  },
+  "eval_run": {
+    "name": "gpt-4o-mini vs gpt-3.5-turbo — Product Content Pipeline",
+    "description": "Model migration evaluation: comparing gpt-4o-mini (proposed upgrade) against gpt-3.5-turbo (current production) for product content generation."
+  },
+  "branch_a": {
+    "label": "gpt-4o-mini (Proposed Upgrade / Baseline)",
+    "name": "gpt-4o-mini@t0.3",
+    "model_id": "gpt-4o-mini",
+    "temperature": 0.3,
+    "is_baseline": true
+  },
+  "branch_b": {
+    "label": "gpt-3.5-turbo (Current Production)",
+    "name": "gpt-3.5-turbo@t0.3",
+    "model_id": "gpt-3.5-turbo",
+    "temperature": 0.3,
+    "is_baseline": false
+  },
+  "steps": [
+    "classify_product",
+    "generate_title",
+    "generate_description",
+    "generate_seo_meta"
+  ],
+  "cases": [
+    {
+      "label": "bluetooth-headphones",
+      "sku": "SUP-7743",
+      "raw_input": {
+        "sku": "SUP-7743",
+        "raw_title": "Bluetooth Headphones BH200 Black",
+        "specs": "40mm drivers, Active Noise Cancellation, 30h battery, USB-C charging, foldable, multipoint pairing, built-in mic, 250g"
+      },
+      "classify_a": "{\"canonical_category\": \"Electronics > Audio > Headphones\", \"product_type\": \"Over-ear wireless headphones\", \"key_features\": [\"Active Noise Cancellation\", \"30-hour battery life\", \"USB-C fast charging\", \"Multipoint pairing for 2 devices\", \"Foldable design\"], \"target_audience\": \"Commuters, remote workers, and frequent travellers\", \"usp\": \"All-day ANC performance with 30-hour battery and USB-C charging at a mid-market price point.\"}",
+      "classify_b": "{\"canonical_category\": \"Electronics > Audio > Headphones\", \"product_type\": \"Wireless headphones\", \"key_features\": [\"Active Noise Cancellation\", \"30h battery\", \"USB-C\", \"Foldable\", \"Multipoint pairing\"], \"target_audience\": \"Music lovers and commuters\", \"usp\": \"Long battery life with active noise cancellation.\"}",
+      "title_a": "{\"title\": \"ANC Over-Ear Headphones | 30-Hour Battery | USB-C | Foldable\", \"alternatives\": [\"Wireless Noise Cancelling Headphones — 30H Battery & USB-C Charging\", \"Over-Ear ANC Headphones with Multipoint Pairing & Foldable Design\"]}",
+      "title_b": "{\"title\": \"Bluetooth Headphones with Active Noise Cancellation\", \"alternatives\": [\"Wireless ANC Headphones 30 Hour Battery\", \"Foldable Bluetooth Headphones with ANC\"]}",
+      "desc_a": "{\"headline\": \"Block out the world and stay charged all day — 30 hours of ANC on a single charge.\", \"body\": \"Whether you're battling open-plan office noise or crowded commutes, these over-ear headphones deliver serious active noise cancellation without the premium price tag. The 40mm drivers produce full, detailed sound across the frequency range, while ANC adapts to your environment to keep distractions at bay.\\n\\nUSB-C charging means you're never hunting for the right cable, and with 30 hours of battery life you'll get through a full work week before needing to top up. Multipoint pairing lets you stay connected to your laptop and phone simultaneously — no more manual switching when a call comes in.\", \"bullets\": [\"Active Noise Cancellation tuned for office and commute environments\", \"30-hour battery life with USB-C fast charging\", \"Seamlessly pair with 2 devices simultaneously via multipoint\", \"Foldable design fits neatly in a bag without a bulky case\", \"Built-in microphone for hands-free calls and voice assistants\"]}",
+      "desc_b": "{\"headline\": \"Enjoy superior sound quality with Active Noise Cancellation.\", \"body\": \"These Bluetooth headphones feature Active Noise Cancellation technology to help you focus on your music. With 30 hours of battery life, you can enjoy your music all day long without needing to recharge.\\n\\nThe foldable design makes them easy to store and carry. The built-in microphone allows for hands-free calling and the USB-C charging port ensures quick and easy charging.\", \"bullets\": [\"Active Noise Cancellation for immersive listening\", \"30-hour battery life for extended use\", \"USB-C charging for convenience\", \"Foldable design for easy storage\", \"Built-in microphone for hands-free calling\"]}",
+      "seo_a": "{\"meta_title\": \"ANC Over-Ear Headphones — 30H Battery | USB-C\", \"meta_description\": \"Block distractions with ANC over-ear headphones. 30-hour battery, USB-C charging, multipoint pairing. Shop now at StyleForge.\", \"keywords\": [\"noise cancelling headphones\", \"ANC headphones\", \"over-ear wireless headphones\", \"30 hour battery headphones\", \"USB-C headphones\", \"foldable headphones\", \"multipoint bluetooth headphones\", \"commuter headphones\", \"headphones for work from home\", \"wireless headphones under £100\"]}",
+      "seo_b": "{\"meta_title\": \"Bluetooth Headphones with ANC — Long Battery Life\", \"meta_description\": \"Shop our Bluetooth headphones with Active Noise Cancellation and 30-hour battery. USB-C charging and foldable design.\", \"keywords\": [\"bluetooth headphones\", \"noise cancelling headphones\", \"wireless headphones\", \"ANC headphones\", \"foldable headphones\", \"long battery headphones\", \"USB-C headphones\", \"over-ear headphones\"]}",
+      "latency_a": [
+        380,
+        290,
+        520,
+        310
+      ],
+      "latency_b": [
+        210,
+        165,
+        290,
+        180
+      ]
+    },
+    {
+      "label": "wireless-charger-pad",
+      "sku": "SUP-8812",
+      "raw_input": {
+        "sku": "SUP-8812",
+        "raw_title": "15W Fast Wireless Charger Pad",
+        "specs": "15W Qi2 certified, compatible iPhone 12+/Samsung Galaxy S21+/AirPods, LED indicator, anti-slip surface, overheat protection, 1m braided cable"
+      },
+      "classify_a": "{\"canonical_category\": \"Mobile Accessories > Charging > Wireless Chargers\", \"product_type\": \"Wireless charging pad\", \"key_features\": [\"15W Qi2 certified fast charging\", \"Broad device compatibility (iPhone 12+, Samsung S21+, AirPods)\", \"Overheat protection\", \"Anti-slip surface\", \"1m braided cable included\"], \"target_audience\": \"iPhone and Samsung users seeking cable-free desk or bedside charging\", \"usp\": \"Qi2-certified 15W charging compatible with the widest range of current flagship devices, cable included.\"}",
+      "classify_b": "{\"canonical_category\": \"Mobile Accessories > Chargers > Wireless\", \"product_type\": \"Wireless charger\", \"key_features\": [\"15W fast charging\", \"Qi2 certified\", \"Compatible with major devices\", \"LED indicator\", \"Anti-slip surface\"], \"target_audience\": \"Smartphone users\", \"usp\": \"Fast wireless charging with wide device compatibility.\"}",
+      "title_a": "{\"title\": \"15W Qi2 Wireless Charger | iPhone 12+ & Samsung S21+ | Cable Included\", \"alternatives\": [\"Qi2 Fast Wireless Charging Pad — 15W with Overheat Protection\", \"15W Wireless Charger Pad for iPhone & Samsung — Anti-Slip, LED\"]}",
+      "title_b": "{\"title\": \"15W Fast Wireless Charger Pad — Qi2 Certified\", \"alternatives\": [\"Fast Wireless Charging Pad 15W Qi2\", \"Wireless Charger 15W with LED Indicator\"]}",
+      "desc_a": "{\"headline\": \"15W Qi2 charging — just set your phone down, cable-free.\", \"body\": \"Certified to the Qi2 standard, this charging pad delivers up to 15W to compatible iPhones and Samsung Galaxy devices — the same fast-charge speeds as Apple MagSafe at a fraction of the price. LED indicator confirms charging has started, and built-in overheat protection keeps your device safe overnight.\\n\\nThe anti-slip silicone surface keeps your phone in position while the 1m braided cable provides just enough reach for a desk or bedside table. Charges AirPods and AirPods Pro in their cases too.\", \"bullets\": [\"Qi2 certified 15W fast charging for iPhone 12 and newer\", \"Samsung Galaxy S21+ and newer supported at full 15W speed\", \"Overheat protection circuit prevents overnight heat build-up\", \"Anti-slip silicone keeps your device centred on the pad\", \"1m braided USB-A cable included — no adapter required\"]}",
+      "desc_b": "{\"headline\": \"Charge your phone wirelessly at full 15W speed.\", \"body\": \"This wireless charging pad is Qi2 certified and supports up to 15W fast charging for compatible devices. Simply place your phone on the pad to begin charging. The LED indicator light confirms your device is charging correctly.\\n\\nThe anti-slip surface prevents your phone from sliding off, and overheat protection keeps your device safe. A 1m braided cable is included.\", \"bullets\": [\"15W Qi2 certified fast wireless charging\", \"Compatible with iPhone 12+ and Samsung Galaxy S21+\", \"LED indicator confirms active charging\", \"Anti-slip surface for stable charging\", \"Overheat protection for safe use\"]}",
+      "seo_a": "{\"meta_title\": \"15W Qi2 Wireless Charger — iPhone & Samsung\", \"meta_description\": \"Qi2 certified 15W wireless charging pad for iPhone 12+ and Samsung S21+. Overheat protection, anti-slip, cable included. Shop StyleForge.\", \"keywords\": [\"Qi2 wireless charger\", \"15W wireless charging pad\", \"iPhone wireless charger\", \"Samsung wireless charger\", \"fast wireless charger\", \"MagSafe compatible charger\", \"wireless charger with cable\", \"bedside wireless charger\", \"AirPods wireless charger\", \"Qi2 certified charger\"]}",
+      "seo_b": "{\"meta_title\": \"15W Fast Wireless Charger Pad — Qi2 Certified\", \"meta_description\": \"Buy our 15W Qi2 certified wireless charging pad. Compatible with iPhone and Samsung. Includes 1m braided cable.\", \"keywords\": [\"wireless charger\", \"Qi2 charger\", \"fast wireless charging\", \"iPhone charger\", \"Samsung charger\", \"wireless charging pad\", \"15W charger\"]}",
+      "latency_a": [
+        360,
+        270,
+        490,
+        295
+      ],
+      "latency_b": [
+        195,
+        155,
+        275,
+        168
+      ]
+    },
+    {
+      "label": "trail-running-shoes",
+      "sku": "SUP-9301",
+      "raw_input": {
+        "sku": "SUP-9301",
+        "raw_title": "Men's Trail Running Shoes Size Range",
+        "specs": "Gore-Tex waterproof upper, Vibram outsole, 8mm drop, 28mm stack height, reflective details, sizes UK6-13"
+      },
+      "classify_a": "{\"canonical_category\": \"Footwear > Athletic > Trail Running\", \"product_type\": \"Men's waterproof trail running shoe\", \"key_features\": [\"Gore-Tex waterproof membrane\", \"Vibram high-grip outsole\", \"8mm heel-to-toe drop\", \"28mm stack height cushioning\", \"Reflective details for low-light visibility\"], \"target_audience\": \"Trail runners and outdoor enthusiasts who run in wet or mixed conditions\", \"usp\": \"Gore-Tex and Vibram combination delivers all-weather grip and waterproofing without sacrificing trail-running performance.\"}",
+      "classify_b": "{\"canonical_category\": \"Footwear > Running > Trail\", \"product_type\": \"Trail running shoes\", \"key_features\": [\"Gore-Tex waterproof\", \"Vibram outsole\", \"8mm drop\", \"Reflective\", \"Wide size range\"], \"target_audience\": \"Outdoor runners\", \"usp\": \"Waterproof trail running shoes with excellent grip.\"}",
+      "title_a": "{\"title\": \"Men's Gore-Tex Trail Running Shoes | Vibram Grip | UK 6–13\", \"alternatives\": [\"Waterproof Men's Trail Shoes — Gore-Tex & Vibram Outsole\", \"Men's All-Weather Trail Running Shoes | 8mm Drop | UK 6–13\"]}",
+      "title_b": "{\"title\": \"Men's Waterproof Trail Running Shoes with Vibram Outsole\", \"alternatives\": [\"Gore-Tex Trail Running Shoes for Men\", \"Men's Trail Shoes Gore-Tex Waterproof Vibram\"]}",
+      "desc_a": "{\"headline\": \"Gore-Tex waterproofing and Vibram grip — the trail doesn't stop at bad weather.\", \"body\": \"Built for runners who don't let a wet forecast cancel their session. The Gore-Tex waterproof membrane locks moisture out while remaining breathable, keeping your feet dry whether you're crossing streams or running through dawn mist. Underneath, a Vibram outsole delivers the multi-directional grip that trail runners trust on technical terrain — mud, root, and rock.\\n\\nThe 8mm heel-to-toe drop and 28mm stack height sit at the sweet spot for trail running: enough cushioning for long efforts, low enough to keep ground feel on technical sections. Full-size UK 6–13 range with reflective details for early morning or winter evening runs when the light drops fast.\", \"bullets\": [\"Gore-Tex membrane — waterproof and breathable in wet trail conditions\", \"Vibram outsole for confident grip on mud, rock, and root\", \"8mm drop and 28mm stack — cushioned without losing ground feel\", \"Reflective panel detailing for visibility on dawn and dusk runs\", \"Full UK 6–13 size range in two colourways\"]}",
+      "desc_b": "{\"headline\": \"Stay dry and grip the trail with Gore-Tex and Vibram technology.\", \"body\": \"These trail running shoes feature a Gore-Tex waterproof upper to keep your feet dry in wet conditions. The Vibram outsole provides excellent traction on varied terrain, giving you confidence on the trail.\\n\\nWith an 8mm drop and good cushioning, these shoes are comfortable for long trail runs. Reflective details improve visibility in low-light conditions and the full size range ensures a great fit.\", \"bullets\": [\"Gore-Tex waterproof upper keeps feet dry\", \"Vibram outsole for superior trail grip\", \"8mm heel-to-toe drop for natural running feel\", \"Reflective details for low-light visibility\", \"Available in UK sizes 6-13\"]}",
+      "seo_a": "{\"meta_title\": \"Men's Gore-Tex Trail Running Shoes | Vibram Grip\", \"meta_description\": \"Waterproof men's trail shoes with Gore-Tex membrane and Vibram outsole. 8mm drop. UK 6–13. Shop all-weather trail running at StyleForge.\", \"keywords\": [\"gore-tex trail running shoes men\", \"waterproof trail running shoes\", \"vibram outsole trail shoes\", \"men's trail shoes UK\", \"waterproof running shoes\", \"trail shoes with grip\", \"all weather running shoes\", \"8mm drop trail shoes\", \"men's outdoor running shoes\", \"technical trail running shoes\"]}",
+      "seo_b": "{\"meta_title\": \"Men's Waterproof Trail Running Shoes — Vibram\", \"meta_description\": \"Shop men's trail running shoes with Gore-Tex waterproofing and Vibram outsole. Available in UK 6-13.\", \"keywords\": [\"trail running shoes\", \"waterproof trail shoes\", \"gore-tex running shoes\", \"vibram trail shoes\", \"men's trail running\", \"trail shoes men\", \"waterproof running shoes men\"]}",
+      "latency_a": [
+        395,
+        285,
+        535,
+        320
+      ],
+      "latency_b": [
+        218,
+        162,
+        298,
+        185
+      ]
+    },
+    {
+      "label": "smart-watch-fitness",
+      "sku": "SUP-4421",
+      "raw_input": {
+        "sku": "SUP-4421",
+        "raw_title": "Smart Watch Fitness Tracker SW50",
+        "specs": "1.8in AMOLED display, heart rate, SpO2, sleep tracking, GPS, 5ATM waterproof, 7-day battery, 120 workout modes, iOS/Android"
+      },
+      "classify_a": "{\"canonical_category\": \"Wearables > Smartwatches > Fitness\", \"product_type\": \"GPS fitness smartwatch\", \"key_features\": [\"1.8\" AMOLED always-bright display\", \"Built-in GPS for route tracking\", \"Heart rate, SpO2, and sleep monitoring\", \"5ATM swim-proof waterproofing\", \"7-day battery life across 120 workout modes\"], \"target_audience\": \"Active individuals and fitness enthusiasts tracking workouts, sleep, and health metrics\", \"usp\": \"GPS-equipped smartwatch with a week-long battery and 120 workout modes at a mid-market price.\"}",
+      "classify_b": "{\"canonical_category\": \"Electronics > Wearables > Smartwatches\", \"product_type\": \"Fitness smartwatch\", \"key_features\": [\"AMOLED display\", \"Heart rate monitor\", \"GPS\", \"5ATM waterproof\", \"7-day battery\"], \"target_audience\": \"Fitness enthusiasts and tech-savvy users\", \"usp\": \"Feature-rich smartwatch with long battery life and comprehensive health tracking.\"}",
+      "title_a": "{\"title\": \"GPS Fitness Smartwatch | 1.8\\\" AMOLED | 7-Day Battery | 5ATM\", \"alternatives\": [\"GPS Smartwatch with Heart Rate, SpO2 & Sleep Tracking — 7-Day Battery\", \"Fitness Smartwatch — GPS, AMOLED Display, 120 Workouts, 5ATM\"]}",
+      "title_b": "{\"title\": \"Smart Watch Fitness Tracker with GPS and AMOLED Display\", \"alternatives\": [\"Fitness Smartwatch GPS Heart Rate Monitor 7-Day Battery\", \"GPS Smart Watch with Health Tracking and 120 Workout Modes\"]}",
+      "desc_a": "{\"headline\": \"GPS tracking, a week of battery, and 120 workouts — one watch, every sport.\", \"body\": \"The 1.8-inch AMOLED display is vivid enough to read in direct sunlight, and the always-on option means your stats are visible mid-run without lifting your wrist. Built-in GPS plots your route and pace without needing your phone, while heart rate, SpO2, and sleep tracking build a picture of your recovery alongside your training.\\n\\nFive-ATM waterproofing means you can swim, shower, and train through rain without worry. Seven days of battery across 120 workout modes — from running and cycling to yoga and HIIT — means this watch keeps up without constant recharging. Syncs with both iOS and Android.\", \"bullets\": [\"Built-in GPS — track runs, rides, and hikes without your phone\", \"1.8\\\" AMOLED display readable in bright sunlight\", \"Heart rate, SpO2, and detailed sleep tracking for recovery insight\", \"5ATM waterproof — safe to swim and shower with\", \"7-day battery across 120 sport modes, iOS and Android compatible\"]}",
+      "desc_b": "{\"headline\": \"Track your fitness with GPS, heart rate, and SpO2 monitoring.\", \"body\": \"This smartwatch features a bright 1.8-inch AMOLED display and comprehensive health tracking including heart rate monitoring, SpO2 blood oxygen tracking, and sleep analysis. Built-in GPS allows you to track your outdoor activities without your phone.\\n\\nWith 120 workout modes, you can track almost any sport or exercise. The 5ATM waterproof rating means it can handle swimming and rain. Battery life lasts up to 7 days on a single charge.\", \"bullets\": [\"Built-in GPS for outdoor activity tracking\", \"Heart rate and SpO2 health monitoring\", \"Sleep tracking for recovery analysis\", \"5ATM waterproof rating for swimming\", \"7-day battery life with 120 workout modes\"]}",
+      "seo_a": "{\"meta_title\": \"GPS Fitness Smartwatch — 7-Day Battery | AMOLED\", \"meta_description\": \"GPS smartwatch with 1.8\\\" AMOLED, heart rate, SpO2, sleep tracking, 5ATM, 7-day battery and 120 workouts. Shop StyleForge.\", \"keywords\": [\"GPS fitness smartwatch\", \"smartwatch with GPS\", \"fitness tracker with GPS\", \"AMOLED smartwatch\", \"7 day battery smartwatch\", \"waterproof smartwatch\", \"health tracking smartwatch\", \"sleep tracking watch\", \"SpO2 smartwatch\", \"workout tracking watch\"]}",
+      "seo_b": "{\"meta_title\": \"Smart Watch Fitness Tracker with GPS — 7-Day Battery\", \"meta_description\": \"Shop our fitness smartwatch with GPS, heart rate, SpO2 and sleep tracking. 5ATM waterproof, 7-day battery, 120 workouts.\", \"keywords\": [\"fitness smartwatch\", \"GPS smartwatch\", \"smart watch\", \"fitness tracker\", \"heart rate monitor watch\", \"waterproof smartwatch\", \"health tracking watch\"]}",
+      "latency_a": [
+        410,
+        300,
+        555,
+        330
+      ],
+      "latency_b": [
+        225,
+        170,
+        305,
+        192
+      ]
+    },
+    {
+      "label": "pour-over-coffee-maker",
+      "sku": "SUP-6634",
+      "raw_input": {
+        "sku": "SUP-6634",
+        "raw_title": "Pour Over Coffee Maker Set",
+        "specs": "Borosilicate glass dripper, 600ml carafe, stainless steel reusable filter, silicone grip, dishwasher safe, BPA free, serves 1-4 cups"
+      },
+      "classify_a": "{\"canonical_category\": \"Kitchen & Dining > Coffee & Tea > Pour Over\", \"product_type\": \"Pour-over coffee dripper set\", \"key_features\": [\"Borosilicate glass construction\", \"Reusable stainless steel filter\", \"600ml carafe (serves 1–4 cups)\", \"Dishwasher safe components\", \"BPA-free materials\"], \"target_audience\": \"Home baristas and specialty coffee enthusiasts who want manual brewing control without paper filters\", \"usp\": \"Full pour-over set in heat-resistant borosilicate glass with a permanent stainless steel filter — no paper filters ever.\"}",
+      "classify_b": "{\"canonical_category\": \"Kitchen > Coffee Equipment > Pour Over\", \"product_type\": \"Pour over coffee maker\", \"key_features\": [\"Borosilicate glass\", \"Stainless steel filter\", \"600ml capacity\", \"Dishwasher safe\", \"BPA free\"], \"target_audience\": \"Coffee enthusiasts\", \"usp\": \"Quality pour over coffee maker with reusable filter.\"}",
+      "title_a": "{\"title\": \"Pour Over Coffee Maker Set — Borosilicate Glass & Reusable Steel Filter\", \"alternatives\": [\"Glass Pour Over Coffee Dripper Set | No Paper Filters | 600ml | 1–4 Cups\", \"Pour Over Set with Stainless Filter — Borosilicate Glass, Dishwasher Safe\"]}",
+      "title_b": "{\"title\": \"Pour Over Coffee Maker with Reusable Stainless Steel Filter\", \"alternatives\": [\"Borosilicate Glass Pour Over Coffee Set\", \"Pour Over Coffee Dripper Set with Steel Filter and Carafe\"]}",
+      "desc_a": "{\"headline\": \"Café-quality pour over at home — no paper filters, no compromise.\", \"body\": \"Made from heat-resistant borosilicate glass, this pour-over set handles straight-from-the-kettle water without cracking or flavour transfer, giving you a clean, neutral brew every time. The stainless steel reusable filter lets the full range of natural coffee oils through — the result is a cup with more body and complexity than paper-filtered alternatives.\\n\\nThe 600ml carafe serves one to four cups from a single brew, and the silicone grip keeps things comfortable when pouring. Every piece is dishwasher safe and BPA-free, so cleanup takes seconds. Everything you need for a proper manual brew, nothing you don't.\", \"bullets\": [\"Borosilicate glass — heat-shock resistant, no flavour transfer\", \"Reusable stainless steel filter — no paper filters ever needed\", \"600ml carafe serves 1–4 cups per brew\", \"Silicone grip for safe, comfortable pouring\", \"Fully dishwasher safe — all components BPA-free\"]}",
+      "desc_b": "{\"headline\": \"Brew delicious pour over coffee at home with ease.\", \"body\": \"This pour over coffee maker set is made from high-quality borosilicate glass, making it heat-resistant and durable. The included stainless steel filter is reusable, meaning you won't need to buy paper filters.\\n\\nWith a 600ml capacity, this set can make one to four cups of coffee at a time. All components are dishwasher safe and BPA-free for easy cleaning and peace of mind.\", \"bullets\": [\"Borosilicate glass construction for durability\", \"Reusable stainless steel filter included\", \"600ml capacity for 1-4 cups\", \"Dishwasher safe for easy cleaning\", \"BPA-free materials for safe use\"]}",
+      "seo_a": "{\"meta_title\": \"Pour Over Coffee Maker Set — Glass & Steel Filter\", \"meta_description\": \"Borosilicate glass pour over set with reusable stainless steel filter. No paper filters. Serves 1–4 cups. Dishwasher safe. Shop StyleForge.\", \"keywords\": [\"pour over coffee maker\", \"glass pour over set\", \"reusable coffee filter\", \"borosilicate coffee dripper\", \"pour over coffee gift\", \"manual coffee brewer\", \"stainless steel coffee filter\", \"pour over no paper filter\", \"home barista equipment\", \"specialty coffee maker\"]}",
+      "seo_b": "{\"meta_title\": \"Pour Over Coffee Maker with Reusable Filter\", \"meta_description\": \"Shop our borosilicate glass pour over coffee set with stainless steel reusable filter. Dishwasher safe, BPA free.\", \"keywords\": [\"pour over coffee\", \"pour over maker\", \"reusable coffee filter\", \"glass coffee dripper\", \"manual coffee maker\", \"pour over set\", \"borosilicate coffee\"]}",
+      "latency_a": [
+        355,
+        265,
+        500,
+        300
+      ],
+      "latency_b": [
+        200,
+        150,
+        280,
+        172
+      ]
+    },
+    {
+      "label": "merino-wool-jumper",
+      "sku": "SUP-2290",
+      "raw_input": {
+        "sku": "SUP-2290",
+        "raw_title": "Merino Wool Crew Neck Jumper",
+        "specs": "100% Merino wool, 18.5 micron, machine washable, sizes XS-XXL, colours: charcoal, navy, forest green, oatmeal, ribbed cuffs and hem"
+      },
+      "classify_a": "{\"canonical_category\": \"Clothing > Knitwear > Jumpers & Sweaters\", \"product_type\": \"Merino wool crew neck jumper\", \"key_features\": [\"100% 18.5-micron Merino wool\", \"Machine washable (rare for Merino)\", \"Sizes XS–XXL\", \"4 versatile colourways\", \"Ribbed cuffs and hem for fit retention\"], \"target_audience\": \"Professionals and outdoors-minded adults seeking a premium everyday or layering jumper that travels well\", \"usp\": \"Fine 18.5-micron Merino with machine-washable care — premium softness without dry-cleaning.\"}",
+      "classify_b": "{\"canonical_category\": \"Clothing > Knitwear\", \"product_type\": \"Wool jumper\", \"key_features\": [\"100% Merino wool\", \"Machine washable\", \"Multiple colours\", \"Ribbed details\", \"Full size range\"], \"target_audience\": \"Adults seeking warm comfortable knitwear\", \"usp\": \"Soft Merino wool jumper that is machine washable.\"}",
+      "title_a": "{\"title\": \"100% Merino Wool Crew Neck Jumper | Machine Washable | XS–XXL\", \"alternatives\": [\"Fine Merino Wool Jumper — 18.5 Micron, Machine Wash, 4 Colours\", \"Merino Crew Neck Sweater | Soft, Warm & Machine Washable | XS–XXL\"]}",
+      "title_b": "{\"title\": \"Merino Wool Crew Neck Jumper — Machine Washable\", \"alternatives\": [\"100% Merino Wool Jumper Machine Washable XS-XXL\", \"Soft Merino Wool Crew Neck Sweater Available in 4 Colours\"]}",
+      "desc_a": "{\"headline\": \"18.5-micron Merino — as soft as cashmere, none of the dry-cleaning.\", \"body\": \"At 18.5 microns, this Merino wool sits at the border of super-fine and ultra-fine: soft enough against bare skin for all-day wear, warm enough to replace heavier mid-layers on cool days. Unlike most fine knitwear, the fabric is certified machine washable — the treatment process protects the fibres so you can wash on a wool or delicate cycle without shrinking or felting.\\n\\nThe ribbed cuffs and hem are cut to hold their shape over repeated washes, and the crew neck is versatile enough to layer under a jacket or wear standalone. Available in four seasonless colours — charcoal, navy, forest green, and oatmeal — in a full XS to XXL range.\", \"bullets\": [\"18.5-micron Merino — fine enough to wear against bare skin all day\", \"Machine washable on a wool cycle — no dry-cleaning bills\", \"Ribbed cuffs and hem retain shape after repeated washing\", \"Versatile crew neck works as a standalone or under a jacket\", \"4 seasonless colours: charcoal, navy, forest green, oatmeal — XS to XXL\"]}",
+      "desc_b": "{\"headline\": \"Stay warm and comfortable in 100% Merino wool.\", \"body\": \"This crew neck jumper is made from 100% Merino wool, known for its natural softness and warmth. The 18.5 micron fibre is fine enough to wear comfortably next to the skin.\\n\\nUnlike many wool garments, this jumper is machine washable for easy care. The ribbed cuffs and hem add a classic finishing touch. Available in four colours and a full size range from XS to XXL.\", \"bullets\": [\"100% Merino wool for natural softness and warmth\", \"18.5 micron fine fibre — soft against the skin\", \"Machine washable for easy care\", \"Ribbed cuffs and hem for a classic look\", \"Available in 4 colours from XS to XXL\"]}",
+      "seo_a": "{\"meta_title\": \"Merino Wool Crew Neck Jumper | Machine Washable\", \"meta_description\": \"18.5-micron Merino wool jumper, machine washable. XS–XXL in charcoal, navy, forest green, oatmeal. Premium knitwear at StyleForge.\", \"keywords\": [\"merino wool jumper\", \"machine washable merino\", \"merino crew neck sweater\", \"fine merino knitwear\", \"18.5 micron merino\", \"merino wool men\", \"merino wool women\", \"warm wool jumper\", \"travel knitwear\", \"merino wool sweater UK\"]}",
+      "seo_b": "{\"meta_title\": \"Merino Wool Jumper — Machine Washable Crew Neck\", \"meta_description\": \"Shop our 100% Merino wool crew neck jumper. Machine washable, available XS-XXL in 4 colours.\", \"keywords\": [\"merino wool jumper\", \"wool crew neck\", \"machine washable wool\", \"merino sweater\", \"wool knitwear\", \"warm jumper\", \"wool jumper UK\"]}",
+      "latency_a": [
+        370,
+        278,
+        515,
+        308
+      ],
+      "latency_b": [
+        205,
+        158,
+        288,
+        176
+      ]
+    },
+    {
+      "label": "yoga-mat-tpe",
+      "sku": "SUP-5517",
+      "raw_input": {
+        "sku": "SUP-5517",
+        "raw_title": "Non-Slip Yoga Mat 6mm",
+        "specs": "TPE foam, 183x61cm, 6mm thickness, natural rubber grip bottom, alignment lines, carrying strap included, sweat-resistant, vegan"
+      },
+      "classify_a": "{\"canonical_category\": \"Sports & Fitness > Yoga > Mats\", \"product_type\": \"Eco-friendly non-slip yoga mat\", \"key_features\": [\"TPE foam construction (eco-friendly, vegan)\", \"Natural rubber grip base — non-slip on hard floors\", \"6mm cushioning for joint support\", \"Alignment lines for pose accuracy\", \"Carrying strap included\"], \"target_audience\": \"Yoga practitioners at all levels, including environmentally conscious buyers who avoid PVC\", \"usp\": \"Vegan TPE foam mat with natural rubber grip base — eco credentials without compromising on cushioning or stability.\"}",
+      "classify_b": "{\"canonical_category\": \"Sports > Yoga\", \"product_type\": \"Yoga mat\", \"key_features\": [\"Non-slip\", \"6mm thick\", \"TPE foam\", \"Alignment lines\", \"Carrying strap\"], \"target_audience\": \"Yoga enthusiasts\", \"usp\": \"Non-slip yoga mat with good cushioning and eco-friendly materials.\"}",
+      "title_a": "{\"title\": \"6mm Non-Slip Yoga Mat | TPE Foam | Alignment Lines | Vegan\", \"alternatives\": [\"Eco Yoga Mat 6mm — TPE Foam, Natural Rubber Grip, Alignment Lines\", \"Non-Slip Yoga Mat | 6mm Cushioning | Vegan TPE | Carrying Strap\"]}",
+      "title_b": "{\"title\": \"Non-Slip Yoga Mat 6mm TPE Foam with Alignment Lines\", \"alternatives\": [\"6mm Yoga Mat Non Slip with Carrying Strap\", \"TPE Yoga Mat 6mm Non-Slip Alignment Lines Vegan\"]}",
+      "desc_a": "{\"headline\": \"Grip the mat, not the floor — 6mm TPE with natural rubber base.\", \"body\": \"TPE foam is the upgrade from PVC: lighter, more responsive underfoot, and fully vegan — no animal-derived materials in manufacturing. The 6mm thickness cushions your knees and hips through floor-based sequences without raising you so far off the ground you lose stability in standing poses.\\n\\nThe natural rubber base layer grips hard floors and wooden boards without leaving marks, even when sweat reaches the edge of the mat. Alignment lines run the length and width so you can self-correct your stance without a mirror. At 183×61cm it covers the full standard yoga mat footprint. The carrying strap is included — no separate purchase needed.\", \"bullets\": [\"Vegan TPE foam — eco-friendly alternative to PVC, naturally odour-resistant\", \"Natural rubber grip base — stays put on wood, tile, and studio floors\", \"6mm cushioning protects joints in floor-based sequences\", \"Alignment lines for self-correcting pose accuracy without a mirror\", \"183×61cm standard size with carrying strap included\"]}",
+      "desc_b": "{\"headline\": \"Practice yoga comfortably with our non-slip 6mm mat.\", \"body\": \"This yoga mat is made from TPE foam, an eco-friendly and vegan material. The 6mm thickness provides good cushioning for your joints during yoga practice.\\n\\nThe natural rubber bottom provides a non-slip surface, keeping the mat in place during your practice. Alignment lines help you position yourself correctly in poses, and the carrying strap makes it easy to transport.\", \"bullets\": [\"Non-slip natural rubber bottom for stability\", \"6mm TPE foam cushioning for joint comfort\", \"Alignment lines for proper pose positioning\", \"Sweat-resistant surface for hygenic use\", \"Carrying strap included for easy transport\"]}",
+      "seo_a": "{\"meta_title\": \"6mm Non-Slip Yoga Mat | TPE Foam | Vegan\", \"meta_description\": \"Vegan TPE yoga mat with natural rubber grip base, 6mm cushioning, alignment lines and carrying strap. Shop yoga mats at StyleForge.\", \"keywords\": [\"non slip yoga mat\", \"TPE yoga mat\", \"vegan yoga mat\", \"6mm yoga mat\", \"eco yoga mat\", \"yoga mat with alignment lines\", \"non PVC yoga mat\", \"yoga mat natural rubber\", \"yoga mat with strap\", \"beginner yoga mat\"]}",
+      "seo_b": "{\"meta_title\": \"Non-Slip Yoga Mat 6mm TPE — Alignment Lines\", \"meta_description\": \"Shop our 6mm TPE foam yoga mat with non-slip base and alignment lines. Vegan and eco-friendly with carrying strap.\", \"keywords\": [\"yoga mat\", \"non slip yoga mat\", \"TPE yoga mat\", \"6mm yoga mat\", \"vegan yoga mat\", \"yoga mat with alignment lines\"]}",
+      "latency_a": [
+        345,
+        260,
+        495,
+        295
+      ],
+      "latency_b": [
+        193,
+        148,
+        272,
+        168
+      ]
+    },
+    {
+      "label": "hyaluronic-acid-serum",
+      "sku": "SUP-3308",
+      "raw_input": {
+        "sku": "SUP-3308",
+        "raw_title": "Hyaluronic Acid Serum 30ml",
+        "specs": "2% Hyaluronic Acid, Vitamin B5, fragrance-free, vegan, cruelty-free, suitable all skin types, dermatologist tested, 30ml dropper"
+      },
+      "classify_a": "{\"canonical_category\": \"Beauty & Skincare > Face > Serums & Treatments\", \"product_type\": \"Hydrating face serum\", \"key_features\": [\"2% Hyaluronic Acid for multi-depth hydration\", \"Vitamin B5 (Panthenol) for barrier support\", \"Fragrance-free — suitable for sensitive skin\", \"Vegan and cruelty-free certified\", \"Dermatologist tested\"], \"target_audience\": \"Skincare-aware adults of all skin types, particularly those with dry, dehydrated, or sensitive skin seeking a science-backed hydrator\", \"usp\": \"Clinical 2% HA concentration with Vitamin B5, dermatologist tested and fragrance-free — suitable for even the most sensitive skin types.\"}",
+      "classify_b": "{\"canonical_category\": \"Beauty > Skincare > Face Serums\", \"product_type\": \"Hyaluronic acid serum\", \"key_features\": [\"2% Hyaluronic Acid\", \"Vitamin B5\", \"Fragrance-free\", \"Vegan\", \"Dermatologist tested\"], \"target_audience\": \"People looking for skin hydration\", \"usp\": \"Hydrating serum with hyaluronic acid suitable for all skin types.\"}",
+      "title_a": "{\"title\": \"2% Hyaluronic Acid Serum + B5 | Fragrance-Free | 30ml\", \"alternatives\": [\"Hyaluronic Acid & Vitamin B5 Face Serum — All Skin Types, Dermatologist Tested\", \"Clinical 2% HA Serum with B5 — Vegan, Cruelty-Free, Fragrance-Free | 30ml\"]}",
+      "title_b": "{\"title\": \"Hyaluronic Acid Serum 30ml — 2% HA with Vitamin B5\", \"alternatives\": [\"Hydrating Hyaluronic Acid Face Serum with B5 Vitamin\", \"2% Hyaluronic Acid Serum Fragrance Free Vegan 30ml\"]}",
+      "desc_a": "{\"headline\": \"2% Hyaluronic Acid + Vitamin B5 — clinical hydration, zero fragrance.\", \"body\": \"Hyaluronic acid works at multiple skin depths: the lower-molecular-weight HA penetrates to plump deeper layers, while higher-molecular-weight HA sits at the surface to lock in moisture and create a smoothing film. At 2%, this formula sits at the upper end of what skincare studies recommend for visible hydration benefits without irritation.\\n\\nVitamin B5 (Panthenol) strengthens the skin barrier, reducing transepidermal water loss so the hydration your HA delivers stays in longer. Completely fragrance-free and tested by dermatologists — including on sensitive skin — it layers under moisturisers and SPF without pilling or interfering with other actives.\", \"bullets\": [\"2% Hyaluronic Acid — multi-weight HA for surface and deeper skin hydration\", \"Vitamin B5 reinforces the skin barrier, reducing moisture loss\", \"Fragrance-free — safe for reactive and sensitive skin types\", \"Vegan and cruelty-free, dermatologist tested for all skin types\", \"Lightweight dropper formula layers cleanly under moisturiser and SPF\"]}",
+      "desc_b": "{\"headline\": \"Keep your skin hydrated with our Hyaluronic Acid Serum.\", \"body\": \"Our Hyaluronic Acid Serum contains 2% Hyaluronic Acid and Vitamin B5 to deeply hydrate your skin. Hyaluronic Acid attracts and retains moisture in the skin, while Vitamin B5 helps to soothe and nourish.\\n\\nThis serum is fragrance-free, making it suitable for sensitive skin. It is vegan and cruelty-free, and has been dermatologist tested to ensure it is safe for all skin types.\", \"bullets\": [\"2% Hyaluronic Acid for deep hydration\", \"Vitamin B5 for skin nourishment and soothing\", \"Fragrance-free formula for sensitive skin\", \"Vegan and cruelty-free\", \"Dermatologist tested for all skin types\"]}",
+      "seo_a": "{\"meta_title\": \"2% Hyaluronic Acid Serum + B5 | Fragrance-Free\", \"meta_description\": \"Dermatologist-tested 2% HA serum with Vitamin B5. Fragrance-free, vegan, cruelty-free. All skin types. 30ml. Shop StyleForge.\", \"keywords\": [\"hyaluronic acid serum\", \"2% hyaluronic acid\", \"HA serum fragrance free\", \"vitamin B5 serum\", \"hydrating face serum\", \"serum for dry skin\", \"sensitive skin serum\", \"vegan hyaluronic acid\", \"dermatologist tested serum\", \"best hyaluronic acid serum UK\"]}",
+      "seo_b": "{\"meta_title\": \"Hyaluronic Acid Serum 30ml — 2% HA + Vitamin B5\", \"meta_description\": \"Shop our 2% Hyaluronic Acid Serum with Vitamin B5. Fragrance-free, vegan, cruelty-free, dermatologist tested for all skin types.\", \"keywords\": [\"hyaluronic acid serum\", \"HA serum\", \"hydrating serum\", \"vitamin B5 serum\", \"fragrance free serum\", \"vegan serum\", \"skin hydration\"]}",
+      "latency_a": [
+        365,
+        272,
+        510,
+        305
+      ],
+      "latency_b": [
+        202,
+        153,
+        284,
+        174
+      ]
+    },
+    {
+      "label": "led-desk-lamp",
+      "sku": "SUP-7719",
+      "raw_input": {
+        "sku": "SUP-7719",
+        "raw_title": "LED Desk Lamp USB-C",
+        "specs": "5 brightness levels, 3 colour temperatures, touch control, USB-C pass-through charging, flexible gooseneck, memory function, eye-care certification"
+      },
+      "classify_a": "{\"canonical_category\": \"Lighting > Desk & Task Lighting > LED\", \"product_type\": \"LED desk lamp with USB-C charging\", \"key_features\": [\"5 brightness levels × 3 colour temperatures (15 total combinations)\", \"USB-C pass-through charging port\", \"Flexible gooseneck for precise positioning\", \"Memory function recalls last settings\", \"Eye-care certification (flicker-free)\"], \"target_audience\": \"Home office workers, students, and late-night readers who want adjustable, eye-friendly task lighting with built-in device charging\", \"usp\": \"Eye-care certified task lighting with 15 light settings and USB-C pass-through charging — one lamp handles light and device charging simultaneously.\"}",
+      "classify_b": "{\"canonical_category\": \"Lighting > Desk Lamps\", \"product_type\": \"LED desk lamp\", \"key_features\": [\"5 brightness levels\", \"3 colour temperatures\", \"USB-C charging\", \"Touch control\", \"Memory function\"], \"target_audience\": \"Home office users and students\", \"usp\": \"Adjustable LED desk lamp with USB-C charging port.\"}",
+      "title_a": "{\"title\": \"LED Desk Lamp | 15 Light Settings | USB-C Charging | Eye-Care Certified\", \"alternatives\": [\"Eye-Care LED Desk Lamp — 5 Brightness × 3 Colour Temps + USB-C Port\", \"Flexible Gooseneck Desk Lamp | Touch Control | USB-C | Memory Function\"]}",
+      "title_b": "{\"title\": \"LED Desk Lamp with USB-C Charging Port and Touch Control\", \"alternatives\": [\"Adjustable LED Desk Lamp 5 Brightness Levels USB-C\", \"LED Study Lamp with USB-C Port and 3 Colour Temperatures\"]}",
+      "desc_a": "{\"headline\": \"Eye-care certified task light with 15 settings and USB-C on the base.\", \"body\": \"Five brightness levels across three colour temperatures — warm (2700K) for evening reading, neutral (4000K) for everyday desk work, and cool (6500K) for focus sessions — give 15 distinct combinations to match any task or time of day. The eye-care certification means flicker-free output at every setting, reducing eye strain during long work sessions.\\n\\nThe flexible gooseneck positions the light head wherever the task demands, while the memory function brings back your last-used setting the moment you switch on. The USB-C pass-through port on the base charges your phone or earbuds while you work — no reaching for a separate socket.\", \"bullets\": [\"15 light combinations: 5 brightness × 3 colour temps (warm/neutral/cool)\", \"Eye-care certified flicker-free output reduces strain on long work sessions\", \"USB-C pass-through port charges devices from the lamp base\", \"Flexible gooseneck for precise, repositionable task lighting\", \"Memory function — lamp returns to your last setting at every switch-on\"]}",
+      "desc_b": "{\"headline\": \"Illuminate your workspace with adjustable LED lighting.\", \"body\": \"This LED desk lamp offers 5 brightness levels and 3 colour temperature settings, giving you full control over your workspace lighting. The touch control panel makes it easy to adjust settings, while the memory function remembers your preferred setting.\\n\\nThe USB-C port on the lamp base allows you to charge your devices while you work. The flexible gooseneck design lets you direct the light exactly where you need it.\", \"bullets\": [\"5 brightness levels for customisable lighting\", \"3 colour temperatures: warm, neutral, and cool white\", \"USB-C charging port on the lamp base\", \"Touch control for easy operation\", \"Memory function remembers your last settings\"]}",
+      "seo_a": "{\"meta_title\": \"LED Desk Lamp | Eye-Care | USB-C | 15 Light Settings\", \"meta_description\": \"Eye-care certified LED desk lamp with 15 light settings, USB-C charging port and memory function. Shop task lighting at StyleForge.\", \"keywords\": [\"led desk lamp\", \"eye care desk lamp\", \"desk lamp with USB-C\", \"adjustable desk lamp\", \"home office lamp\", \"study lamp\", \"flicker free desk lamp\", \"colour temperature desk lamp\", \"gooseneck desk lamp\", \"desk lamp with charging port\"]}",
+      "seo_b": "{\"meta_title\": \"LED Desk Lamp with USB-C Charging — Touch Control\", \"meta_description\": \"Shop our LED desk lamp with 5 brightness levels, 3 colour temperatures, USB-C charging and memory function.\", \"keywords\": [\"led desk lamp\", \"desk lamp USB-C\", \"adjustable desk lamp\", \"touch control lamp\", \"home office lamp\", \"study desk lamp\", \"colour temperature lamp\"]}",
+      "latency_a": [
+        358,
+        268,
+        498,
+        298
+      ],
+      "latency_b": [
+        197,
+        151,
+        276,
+        169
+      ]
+    },
+    {
+      "label": "resistance-bands-set",
+      "sku": "SUP-1145",
+      "raw_input": {
+        "sku": "SUP-1145",
+        "raw_title": "Resistance Bands Set 5-Pack",
+        "specs": "Natural latex, 5 resistance levels 10/20/30/40/50 lb, 208cm loop bands, anti-snap design, mesh carry bag, exercise guide included"
+      },
+      "classify_a": "{\"canonical_category\": \"Sports & Fitness > Strength Training > Resistance Bands\", \"product_type\": \"Loop resistance band set\", \"key_features\": [\"5 resistance levels: 10, 20, 30, 40, 50 lb\", \"208cm full-body length bands\", \"Natural latex anti-snap construction\", \"Mesh carry bag for storage and travel\", \"Exercise guide included\"], \"target_audience\": \"Home gym users, travellers, and physiotherapy/rehabilitation users needing versatile strength training without equipment\", \"usp\": \"Full 10–50 lb progression set in anti-snap natural latex with 208cm length — usable for full-body strength training, not just upper body.\"}",
+      "classify_b": "{\"canonical_category\": \"Fitness > Resistance Bands\", \"product_type\": \"Resistance bands\", \"key_features\": [\"5 resistance levels\", \"Natural latex\", \"Anti-snap\", \"Carry bag\", \"Exercise guide\"], \"target_audience\": \"Fitness enthusiasts\", \"usp\": \"Versatile resistance band set for home workouts.\"}",
+      "title_a": "{\"title\": \"Resistance Bands Set — 5 Levels 10–50 lb | Natural Latex | 208cm\", \"alternatives\": [\"5-Pack Resistance Bands — 10 to 50 lb Anti-Snap Latex | Carry Bag + Guide\", \"Full-Body Resistance Band Set | 5 Levels | 208cm Loop | Anti-Snap Latex\"]}",
+      "title_b": "{\"title\": \"Resistance Bands Set 5-Pack — 10 to 50 lb Natural Latex\", \"alternatives\": [\"5 Resistance Bands Set Natural Latex Anti-Snap with Carry Bag\", \"Resistance Bands 5 Pack 10-50lb with Exercise Guide and Bag\"]}",
+      "desc_a": "{\"headline\": \"Five bands, full-body training — 10 to 50 lb in anti-snap natural latex.\", \"body\": \"At 208cm, these loop bands are long enough for lower body exercises — squats, deadlifts, and hip thrusts — not just upper-body resistance work. The five-resistance progression (10, 20, 30, 40, 50 lb) covers beginners through experienced lifters, and combining two bands gives you additional resistance options beyond the individual ratings.\\n\\nNatural latex with an anti-snap construction means the bands stretch consistently and return crisply without the sudden snap risk of cheaper materials. The included mesh carry bag makes the whole set packable for travel or the gym, and the exercise guide gives structure to anyone new to band training.\", \"bullets\": [\"208cm loop length — long enough for squats, deadlifts, and leg work\", \"5 resistance levels: 10, 20, 30, 40, 50 lb for progressive overload\", \"Anti-snap natural latex — consistent stretch and snap-back, no blowout risk\", \"Combine two bands for additional resistance beyond the 50 lb top level\", \"Mesh carry bag and illustrated exercise guide included\"]}",
+      "desc_b": "{\"headline\": \"Build strength anywhere with this complete resistance band set.\", \"body\": \"This set includes 5 resistance bands in different strengths from 10 to 50 lb, made from natural latex with an anti-snap design. The bands are suitable for a wide range of exercises including upper body, lower body, and full-body workouts.\\n\\nAt 208cm in length, these are full-size loop bands suitable for most exercises. The set comes with a mesh carry bag for storage and transport, and an exercise guide to help you get started.\", \"bullets\": [\"5 resistance levels from 10 to 50 lb for progressive training\", \"Natural latex anti-snap construction for safety and durability\", \"208cm loop bands suitable for full-body exercises\", \"Mesh carry bag for easy storage and travel\", \"Exercise guide included for workout inspiration\"]}",
+      "seo_a": "{\"meta_title\": \"Resistance Bands Set 5-Pack | 10–50 lb | Anti-Snap Latex\", \"meta_description\": \"Anti-snap natural latex resistance bands in 5 levels (10–50 lb), 208cm loop. Carry bag and exercise guide included. Shop at StyleForge.\", \"keywords\": [\"resistance bands set\", \"loop resistance bands\", \"resistance bands 5 pack\", \"anti snap resistance bands\", \"natural latex bands\", \"home gym resistance bands\", \"resistance bands for legs\", \"progressive resistance bands\", \"pull up resistance bands\", \"resistance bands with bag\"]}",
+      "seo_b": "{\"meta_title\": \"Resistance Bands Set 5-Pack — 10 to 50 lb Natural Latex\", \"meta_description\": \"Shop our 5-pack resistance band set. 10-50 lb natural latex anti-snap bands with carry bag and exercise guide.\", \"keywords\": [\"resistance bands\", \"resistance bands set\", \"loop bands\", \"natural latex bands\", \"fitness bands\", \"home workout bands\", \"resistance training\"]}",
+      "latency_a": [
+        350,
+        263,
+        488,
+        293
+      ],
+      "latency_b": [
+        192,
+        147,
+        270,
+        165
+      ]
+    }
+  ],
+  "input_field": "raw_input",
+  "step_field_map": {
+    "classify_product": [
+      "classify_a",
+      "classify_b"
+    ],
+    "generate_title": [
+      "title_a",
+      "title_b"
+    ],
+    "generate_description": [
+      "desc_a",
+      "desc_b"
+    ],
+    "generate_seo_meta": [
+      "seo_a",
+      "seo_b"
+    ]
+  }
+}

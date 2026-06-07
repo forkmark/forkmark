@@ -1,0 +1,472 @@
+"""
+Forkmark Retail Demo — Direct API Seeder
+==========================================
+
+This seeder bypasses the SDK and calls the Forkmark REST API directly.
+Use this if you want to populate the dashboard immediately without
+any Python environment setup.
+
+Run:   python seed_demo.py
+Then:  open http://localhost:5173
+
+What it creates:
+  • 1 workflow:   "retail-support-pipeline"
+  • 1 eval run:   "GPT-4o-mini vs GPT-4o — Customer Support Triage"
+  • 15 test cases covering the full range of retail support scenarios
+  • 4 steps per case: intent classification, sentiment analysis,
+    response drafting, escalation scoring
+  • 60 total step comparisons with realistic divergence scores
+  • Divergence ranging from 2% (simple queries) to 85% (safety incidents)
+
+Requirements:   pip install httpx
+"""
+
+import httpx
+import json
+import re
+import time
+import sys, os
+from difflib import SequenceMatcher
+
+BASE_URL = "http://localhost:7700"
+_api_key = os.environ.get("FORKMARK_API_KEY", "")
+HEADERS  = {"Content-Type": "application/json"}
+if _api_key:
+    HEADERS["X-API-Key"] = _api_key
+
+
+def api(method, path, data=None, _retries=4, _backoff=1.0):
+    url = BASE_URL + path
+    for attempt in range(_retries):
+        try:
+            r = getattr(httpx, method)(url, json=data, headers=HEADERS, timeout=10)
+            if r.status_code == 429:
+                wait = _backoff * (2 ** attempt)
+                print(f"  [rate-limit] backing off {wait:.1f}s before retry {attempt+1}/{_retries-1}...")
+                time.sleep(wait)
+                continue
+            r.raise_for_status()
+            return r.json()
+        except httpx.ConnectError:
+            print(f"\n[error] Cannot connect to {BASE_URL}")
+            print("  Make sure the Forkmark backend is running:")
+            print("  cd forkmark && uvicorn backend.main:app --reload\n")
+            sys.exit(1)
+        except Exception as e:
+            print(f"[error] {method.upper()} {path}: {e}")
+            if hasattr(e, 'response') and e.response is not None:
+                print(f"  Response: {e.response.text[:200]}")
+            return None
+    print(f"[error] {method.upper()} {path}: rate limit retries exhausted")
+    return None
+
+
+def divergence(a: str, b: str) -> float:
+    wa = set(re.findall(r'\w+', a.lower()))
+    wb = set(re.findall(r'\w+', b.lower()))
+    j  = 1 - len(wa & wb) / (len(wa | wb) or 1)
+    s  = 1 - SequenceMatcher(None, a, b).ratio()
+    return round(j * 0.6 + s * 0.4, 4)
+
+
+# ─── Ticket data ──────────────────────────────────────────────────────────────
+TICKETS = [
+    {
+        "label": "angry-late-delivery", "tier": "standard", "channel": "email",
+        "ticket_id": "TKT-001",
+        "text": "I ordered a birthday gift for my daughter two weeks ago (order #ORD-77812) and it STILL hasn't arrived. Her birthday was yesterday and I'm absolutely furious. Your website said 3-5 business days. This is completely unacceptable. I want a full refund AND compensation for the ruined birthday.",
+        "intent_a":  "ORDER_TRACKING > late_delivery",
+        "intent_b":  "ORDER_TRACKING > significantly_late_delivery | gift_context | compensation_requested",
+        "sentiment_a": "Angry / Frustrated",
+        "sentiment_b": "Highly frustrated (8/10) — missed birthday deadline creates high emotional stakes; tone is accusatory. Compensation expectation set explicitly.",
+        "response_a": "Dear Customer, We apologise for the delay with order #ORD-77812. We understand this is frustrating. We are investigating the delivery status and will update you within 24 hours. If the item cannot be delivered, we will process a full refund. We are sorry for any inconvenience caused.",
+        "response_b": "Dear [Customer Name], I completely understand how upsetting it must be that your daughter's birthday gift didn't arrive in time — I'm truly sorry. I've flagged order #ORD-77812 as urgent and am personally checking with our carrier right now. In the meantime, I've authorised an immediate full refund regardless of the delivery outcome, plus a £15 gift voucher as a gesture of goodwill for the distress caused. You'll receive both confirmations by email within the hour. I'm sorry we let you and your daughter down on such an important day.",
+        "escalation_a": "Score: 6/10. Delayed delivery, customer anger, compensation demanded.",
+        "escalation_b": "Score: 7/10. Missed birthday deadline creates high emotional stakes. Customer has explicitly stated compensation expectation. Recommend senior agent review if no delivery update within 2 hours. Risk: negative social review.",
+    },
+    {
+        "label": "wrong-item-received", "tier": "standard", "channel": "chat",
+        "ticket_id": "TKT-002",
+        "text": "Hi, I received my order today but it's the completely wrong item. I ordered a blue medium t-shirt (SKU: TS-BLU-M) and received a green XL. The packing slip shows my correct order so the warehouse must have mixed it up. Can you send the right item ASAP and arrange pickup of the wrong one?",
+        "intent_a":  "FULFILMENT_ERROR > wrong_item",
+        "intent_b":  "FULFILMENT_ERROR > wrong_item | sku_mismatch | requires_pickup_coordination",
+        "sentiment_a": "Mildly frustrated",
+        "sentiment_b": "Mildly frustrated (4/10) — pragmatic tone, not aggressive. Wants resolution not confrontation. Cooperative.",
+        "response_a": "Hi, Thank you for contacting us. We apologise for sending the wrong item. We will arrange for the correct blue medium t-shirt to be sent and will organise a collection of the incorrect item. Please expect a follow-up email with the collection details. Sorry for the inconvenience.",
+        "response_b": "Hi [Customer Name], I'm so sorry — receiving the completely wrong item is really frustrating, especially when the packing slip shows your correct order. I've arranged for your blue medium t-shirt (SKU: TS-BLU-M) to be dispatched to you today on express delivery at no cost, and I've scheduled a courier to collect the incorrect green XL from your address — you won't need to do anything. You'll get tracking details for the new delivery and a collection slot confirmation within 2 hours. Really sorry for the mix-up.",
+        "escalation_a": "Score: 3/10. Straightforward fulfilment error, easily resolved.",
+        "escalation_b": "Score: 3/10. Clear-cut fulfilment error with supporting evidence (SKU mismatch, correct packing slip). Automation-eligible. Low escalation risk.",
+    },
+    {
+        "label": "vip-damaged-product", "tier": "vip", "channel": "email",
+        "ticket_id": "TKT-003",
+        "text": "This is my third order this year and I've always been happy, but my latest delivery arrived with the item visibly damaged — the box was crushed and the product inside has a crack. I've attached photos. Given my loyalty, I'd expect this to be resolved immediately with a replacement at no extra cost.",
+        "intent_a":  "PRODUCT_QUALITY > damaged_item",
+        "intent_b":  "PRODUCT_QUALITY > damaged_on_delivery | vip_loyalty_context | photo_evidence",
+        "sentiment_a": "Disappointed",
+        "sentiment_b": "Disappointed (5/10) — leveraging loyalty history as social proof. Expectation of premium treatment without explicit threat.",
+        "response_a": "Dear Customer, We are sorry to hear your item arrived damaged. Please send photos to our returns team and we will process a replacement. Thank you for your continued custom.",
+        "response_b": "Dear [Customer Name], I'm really sorry your order arrived damaged — that's simply not the experience a loyal customer of three years deserves. Thank you for attaching the photos; I can clearly see the damage. I've immediately authorised an express replacement at no cost, which will be dispatched today. I've also arranged for a prepaid returns label to be emailed to you for the damaged item — no need to chase. As a token of our appreciation for your loyalty, I've added a £20 credit to your account. You'll see the replacement tracking and credit confirmation shortly.",
+        "escalation_a": "Score: 5/10. Damaged product, VIP customer. Standard replacement.",
+        "escalation_b": "Score: 6/10. VIP tier customer (3 orders this year) with photo evidence of damage. Standard replacement insufficient — loyalty gesture required. Recommend customer retention team note.",
+    },
+    {
+        "label": "simple-tracking-query", "tier": "standard", "channel": "chat",
+        "ticket_id": "TKT-004",
+        "text": "Hey, just wondering where my order is? Placed it 4 days ago (order #ORD-88901). Tracking link isn't updating — still shows 'label created'. Thanks",
+        "intent_a":  "ORDER_TRACKING",
+        "intent_b":  "ORDER_TRACKING > stale_label | potential_carrier_delay",
+        "sentiment_a": "Neutral / Curious",
+        "sentiment_b": "Neutral (2/10) — casual, patient tone. Low urgency. Simple enquiry.",
+        "response_a": "Hi, Your tracking is showing 'label created' which means it is with our dispatch team. It should update within 1-2 business days. If it does not update, please contact us again. Thanks.",
+        "response_b": "Hi [Customer Name]! Your order is on its way — the 'label created' status means it's been handed to our carrier but they haven't scanned it into their system yet. This is normal within the first 1-2 business days after dispatch. If your tracking hasn't updated by Thursday, please reply here and I'll investigate further straight away. Thanks for your patience!",
+        "escalation_a": "Score: 1/10. Routine tracking query.",
+        "escalation_b": "Score: 1/10. Pre-dispatch tracking delay, normal. No escalation needed.",
+    },
+    {
+        "label": "refund-policy-dispute", "tier": "standard", "channel": "email",
+        "ticket_id": "TKT-005",
+        "text": "I want to return a jacket I bought 32 days ago. Your website says 30-day returns but I've been ill and couldn't get to the post office. This is really unreasonable given the circumstances. Can you make an exception? The item is unused with all tags attached.",
+        "intent_a":  "RETURNS > policy_exception_req",
+        "intent_b":  "RETURNS > policy_exception_request | mitigating_circumstances",
+        "sentiment_a": "Frustrated",
+        "sentiment_b": "Frustrated (5/10) — feels rules are unfair given circumstances. Appeals to empathy. Non-aggressive but firm.",
+        "response_a": "Dear Customer, Our return policy is 30 days. As your return is outside this window, we are unable to process it. We apologise for any inconvenience and encourage you to review our returns policy on our website.",
+        "response_b": "Dear [Customer Name], I'm sorry to hear you've been unwell — that's never easy. While our standard policy is 30 days, the circumstances you've described — illness preventing you from posting — are exactly the kind of situation we use our goodwill discretion for. I've approved a one-time policy exception for your return. Please use the prepaid label I've emailed you and we'll process your refund as soon as the item arrives back with us, provided it's unused with tags. I hope you're feeling better.",
+        "escalation_a": "Score: 4/10. Policy exception request. May require manager approval.",
+        "escalation_b": "Score: 4/10. 2-day policy overage with verifiable mitigating circumstances (illness). Recommend goodwill exception — low financial risk (single item). No human escalation required.",
+    },
+    {
+        "label": "subscription-cancel-urgent", "tier": "premium", "channel": "email",
+        "ticket_id": "TKT-006",
+        "text": "I need to cancel my subscription IMMEDIATELY. I was charged again today even though I thought I cancelled last month. I have NOT authorised this charge. Please cancel the subscription, refund the unauthorised charge to my card ending 4821, and confirm in writing.",
+        "intent_a":  "BILLING > cancel_subscription",
+        "intent_b":  "BILLING > unauthorised_charge | cancel_subscription | urgent | written_confirmation_required",
+        "sentiment_a": "Urgent / Angry",
+        "sentiment_b": "Angry (7/10) — financial grievance with explicit urgency. Expects documented confirmation. Tone is assertive.",
+        "response_a": "Dear Customer, We have cancelled your subscription and will process a refund for the recent charge. This may take 3-5 business days to appear on your statement. We apologise for the inconvenience.",
+        "response_b": "Dear [Customer Name], I completely understand your frustration — being charged unexpectedly is alarming, and I want to resolve this right away. I've cancelled your subscription effective immediately and have raised an urgent refund request for the charge to your card ending 4821. Refunds typically take 3-5 business days, but I've marked this as priority. I'm also sending you a formal cancellation confirmation and refund receipt to your registered email address now, as requested. Again, I sincerely apologise for the distress this has caused.",
+        "escalation_a": "Score: 7/10. Unauthorised charge, urgent cancellation.",
+        "escalation_b": "Score: 8/10. Unauthorised charge + explicit cancellation with written confirmation demand. Financial and legal exposure. Must be handled by senior billing agent. Do not delay — chargeback risk active.",
+    },
+    {
+        "label": "product-quality-complaint", "tier": "standard", "channel": "email",
+        "ticket_id": "TKT-007",
+        "text": "The blender I bought three months ago has stopped working. The motor makes a grinding noise and then cuts out. It's still under the one-year warranty. I use it daily for smoothies so this is really inconvenient. Please tell me how to get a replacement or repair.",
+        "intent_a":  "WARRANTY > product_failure",
+        "intent_b":  "WARRANTY > product_failure | within_warranty | daily_use_impact",
+        "sentiment_a": "Neutral / Concerned",
+        "sentiment_b": "Mildly frustrated (4/10) — inconvenienced but measured. Aware of warranty rights. Expects process clarity.",
+        "response_a": "Dear Customer, We are sorry to hear your blender has stopped working. As it is within warranty, please complete our online warranty claim form. Once approved, we will arrange a repair or replacement. Apologies for the disruption.",
+        "response_b": "Dear [Customer Name], I'm really sorry your blender has developed a fault — especially since you rely on it daily. The grinding noise you've described sounds like a motor bearing issue, which is a known fault covered under warranty. I don't want to put you through a lengthy claims process, so I've pre-approved a like-for-like replacement to be dispatched to you this week. I'll email you a prepaid returns label for the faulty unit — there's no need to send it back before the replacement arrives. You should receive your new blender within 3-5 business days.",
+        "escalation_a": "Score: 3/10. Standard warranty claim.",
+        "escalation_b": "Score: 3/10. Warranty claim with clear fault description. Within warranty period. Standard replacement flow. No escalation needed.",
+    },
+    {
+        "label": "duplicate-charge", "tier": "standard", "channel": "chat",
+        "ticket_id": "TKT-008",
+        "text": "I've been charged twice for the same order! My statement shows two charges of £47.99 on the same day for order #ORD-99312. This is a financial error that needs to be fixed right away. Please refund the duplicate charge.",
+        "intent_a":  "BILLING > duplicate_charge",
+        "intent_b":  "BILLING > duplicate_charge | financial_error | requires_immediate_resolution",
+        "sentiment_a": "Urgent / Concerned",
+        "sentiment_b": "Concerned (6/10) — financial error language. Wants speed over apology.",
+        "response_a": "Hi, We are sorry about the duplicate charge. We have identified the error and will refund £47.99 to your account. This may take 3-5 business days. Apologies for the inconvenience.",
+        "response_b": "Hi [Customer Name], I can see exactly what's happened here — there was a double-authorisation on order #ORD-99312 that resulted in two charges of £47.99. This is a financial error on our end and I'm really sorry. I've raised an urgent refund for the duplicate £47.99 to your card — this will appear within 3-5 business days, but I've flagged it as priority. I'm also sending you a written confirmation of the duplicate charge and the refund for your records. Please don't hesitate to reach out if it hasn't cleared by then.",
+        "escalation_a": "Score: 6/10. Financial error, duplicate charge.",
+        "escalation_b": "Score: 7/10. Confirmed financial error. Customer has documentation. Refund must be expedited — bank dispute window is typically 30 days. Finance team notification recommended.",
+    },
+    {
+        "label": "missing-item-partial", "tier": "standard", "channel": "email",
+        "ticket_id": "TKT-009",
+        "text": "My order arrived today but one item is missing. I ordered 3 items but only 2 were in the box. The missing item is the Aromatherapy Candle Set (SKU: ACS-003). The packing slip does list all 3 items. Please send the missing item.",
+        "intent_a":  "FULFILMENT_ERROR > missing_item",
+        "intent_b":  "FULFILMENT_ERROR > partial_delivery | sku_identified",
+        "sentiment_a": "Neutral",
+        "sentiment_b": "Neutral (3/10) — factual and methodical. Has the evidence ready. Expects swift resolution.",
+        "response_a": "Dear Customer, We are sorry the Aromatherapy Candle Set was missing from your order. We will dispatch a replacement as soon as possible. You will receive a shipping confirmation by email.",
+        "response_b": "Dear [Customer Name], I'm sorry your Aromatherapy Candle Set (SKU: ACS-003) wasn't in your parcel — the packing slip confirms it should have been, so this was an error on our side. I've arranged for a replacement to be dispatched to you today, and you'll receive a shipping confirmation by email shortly. No action is required on your part. Thank you for letting us know and sorry for the inconvenience.",
+        "escalation_a": "Score: 2/10. Simple missing item, straightforward replacement.",
+        "escalation_b": "Score: 2/10. Single item missing, SKU identified, packing slip confirms error. Automated replacement eligible. No escalation.",
+    },
+    {
+        "label": "account-locked-unable-to-order", "tier": "premium", "channel": "email",
+        "ticket_id": "TKT-010",
+        "text": "My account seems to be locked. I tried logging in three times and now it's saying 'account suspended'. I haven't done anything wrong — I've been a customer for 5 years. I need to place an urgent order for a client gift. Please unlock my account immediately.",
+        "intent_a":  "ACCOUNT > locked",
+        "intent_b":  "ACCOUNT > suspended_incorrectly | long_term_customer | urgent_business_need",
+        "sentiment_a": "Frustrated / Urgent",
+        "sentiment_b": "Frustrated (6/10) — long-term customer identity invoked. Business urgency adds pressure. Expects immediate fix.",
+        "response_a": "Dear Customer, We are sorry your account has been locked. Please verify your identity by clicking the link we have sent to your registered email address. Once verified, your account will be unlocked within 2 hours.",
+        "response_b": "Dear [Customer Name], I'm so sorry you've been locked out — especially as a customer of 5 years, this is the last thing you should be dealing with. I've reviewed your account and can see it was flagged by an automated security system — it should not have been. I've manually unlocked it right now, so you should be able to log in immediately. I've also added a note to your account to prevent this from happening again. For your urgent order, if you encounter any issues placing it, please reply here and I'll process it directly for you. Again, I'm truly sorry for the disruption.",
+        "escalation_a": "Score: 5/10. Account issue, customer cannot place order.",
+        "escalation_b": "Score: 6/10. Long-term customer (5 years) incorrectly suspended. Business urgency present. Manual unlock and account review required. Risk: churn of high-LTV customer.",
+    },
+    {
+        "label": "threat-legal-action", "tier": "standard", "channel": "email",
+        "ticket_id": "TKT-011",
+        "text": "I have now contacted you FOUR TIMES about my missing refund for order #ORD-65500. It has been 6 weeks. If I do not receive my refund of £234.00 within 48 hours, I will be reporting this to Trading Standards, the Financial Ombudsman, and my bank for a chargeback. This is your final notice.",
+        "intent_a":  "COMPLAINT > refund_overdue",
+        "intent_b":  "COMPLAINT > escalation_risk | legal_threat | financial_ombudsman | chargeback_risk | 6wk_delay",
+        "sentiment_a": "Very Angry",
+        "sentiment_b": "Very angry (9/10) — explicit legal escalation threat after 4 failed contacts. High churn risk. Approaching breaking point.",
+        "response_a": "Dear Customer, We sincerely apologise for the delay in processing your refund. We take this matter seriously and have escalated it to our finance team for urgent review. You will be contacted within 48 hours.",
+        "response_b": "Dear [Customer Name], I want to start by sincerely apologising — four contacts over six weeks without resolution is a complete failure on our part, and your frustration is entirely justified. I have escalated your refund of £234.00 to our Senior Finance Manager as an emergency case, with a personal commitment that this will be resolved within 24 hours, not 48. I am also logging a formal complaint on your behalf and will send you the reference number and the name of the Finance Manager handling this within the hour. I understand you are considering regulatory action — that is your right, and I want to do everything possible to make this right before it comes to that. You will hear from me personally by end of business today.",
+        "escalation_a": "Score: 9/10. Legal threat, repeated failures. URGENT.",
+        "escalation_b": "Score: 10/10. CRITICAL ESCALATION REQUIRED. Customer has contacted 4 times over 6 weeks. Explicit threats: Trading Standards, Financial Ombudsman, chargeback. 6-week delay is indefensible. Assign to Senior Customer Relations Manager immediately. Do not use template responses. Financial and reputational risk is high.",
+    },
+    {
+        "label": "positive-feedback-small-request", "tier": "standard", "channel": "chat",
+        "ticket_id": "TKT-012",
+        "text": "Just wanted to say your service is usually great! Quick question — can I change the delivery address on my current order #ORD-10234? It hasn't shipped yet. New address is 22 Park Lane, London, SW1A 1AA.",
+        "intent_a":  "ORDER_MODIFICATION > address",
+        "intent_b":  "ORDER_MODIFICATION > address_change | positive_context | pre_dispatch",
+        "sentiment_a": "Positive",
+        "sentiment_b": "Positive (1/10) — clearly satisfied customer. Simple request. High satisfaction baseline.",
+        "response_a": "Hi, Thank you for your kind words! We have updated the delivery address for order #ORD-10234 to 22 Park Lane, London, SW1A 1AA. You will receive an updated confirmation shortly.",
+        "response_b": "Hi [Customer Name], Thank you so much — we really appreciate you taking the time to say that! I've updated the delivery address for order #ORD-10234 to 22 Park Lane, London, SW1A 1AA — all sorted. You'll receive an updated order confirmation shortly. Looking forward to your next order!",
+        "escalation_a": "Score: 1/10. Address change, positive context.",
+        "escalation_b": "Score: 1/10. Pre-dispatch address change. Positive customer. Automation-eligible. No escalation.",
+    },
+    {
+        "label": "bulk-order-issue", "tier": "business", "channel": "email",
+        "ticket_id": "TKT-013",
+        "text": "We placed a bulk order of 200 units (PO: B-22934) for our company event next Friday. We've just noticed the order confirmation shows the wrong product variant (black instead of white). Given the volume and tight deadline, we need urgent confirmation this can be corrected. Our account manager is unavailable. Please escalate.",
+        "intent_a":  "FULFILMENT_ERROR > wrong_variant",
+        "intent_b":  "FULFILMENT_ERROR > bulk_order_variant_error | event_deadline | business_account | escalation_needed",
+        "sentiment_a": "Concerned / Urgent",
+        "sentiment_b": "Concerned (6/10) — business-critical situation with hard deadline. Professional tone but high stakes. Account manager absent adds risk.",
+        "response_a": "Dear Customer, We have received your query about order B-22934. We are checking the order details and will contact you with an update. We understand there is a deadline and will work to resolve this quickly.",
+        "response_b": "Dear [Customer Name], Thank you for flagging this — I can see the urgency given your event on Friday. I've immediately raised this as a priority case with our warehouse team to check whether the variant can be corrected before dispatch. Given the volume (200 units) and the tight deadline, I'm escalating this to our Business Accounts team right now and one of our senior representatives will contact you within 2 hours with a confirmed resolution. Please accept our apologies for the variant error — we understand the importance of this event to your organisation.",
+        "escalation_a": "Score: 8/10. Business order, wrong variant, deadline Friday.",
+        "escalation_b": "Score: 9/10. Business account, 200-unit order with wrong variant, event deadline Friday. Account manager unavailable. Financial and reputational impact significant. Escalate to Business Accounts senior team immediately.",
+    },
+    {
+        "label": "allergy-safety-concern", "tier": "standard", "channel": "email",
+        "ticket_id": "TKT-014",
+        "text": "I ordered your 'Natural Face Cream' (SKU: NFC-200) and I am very concerned — I had an allergic reaction after using it. The ingredients listed online do NOT match the label on the product I received. I believe there is a mislabelling issue. I'm fine now but this is a serious safety concern and I want to know what you're going to do about it.",
+        "intent_a":  "PRODUCT_QUALITY > allergy",
+        "intent_b":  "SAFETY_INCIDENT > allergic_reaction | ingredient_mislabelling | regulatory_risk | urgent",
+        "sentiment_a": "Concerned / Scared",
+        "sentiment_b": "Fearful and concerned (7/10) — safety incident creates significant anxiety. Reporting tone is measured but serious. Regulatory language possible.",
+        "response_a": "Dear Customer, We are very sorry to hear about your allergic reaction. Please stop using the product immediately. We are investigating the labelling discrepancy you have reported. Please return the product for a full refund.",
+        "response_b": "Dear [Customer Name], I'm very relieved to hear you're okay, and I want to take this report extremely seriously. A discrepancy between the online ingredients list and the physical product label is a significant safety concern that I'm escalating to our Product Safety team immediately — this is not something I'm able to handle through standard support. Our Head of Quality Assurance will contact you directly within 4 hours. In the meantime, please stop using the product and keep it for potential testing. I've raised a full refund and will arrange a specialist courier to collect the item. I'm also logging this as a formal product safety incident as required by our regulatory obligations. Thank you for bringing this to our attention — your safety is our absolute priority.",
+        "escalation_a": "Score: 7/10. Allergic reaction, labelling issue.",
+        "escalation_b": "Score: 10/10. PRODUCT SAFETY INCIDENT. Allergic reaction + ingredient label discrepancy. This is a potential regulatory compliance matter (Consumer Protection Act, Cosmetic Products Regulation). Do NOT handle through standard support. Escalate to Product Safety & Quality Manager immediately. Regulatory reporting may be required. Preserve product for testing.",
+    },
+    {
+        "label": "sizing-exchange-simple", "tier": "standard", "channel": "chat",
+        "ticket_id": "TKT-015",
+        "text": "Hi! The jeans I ordered are a bit too small. Can I exchange them for the next size up? Order #ORD-55009. They're unworn with tags. Happy to post them back.",
+        "intent_a":  "RETURNS > size_exchange",
+        "intent_b":  "RETURNS > size_exchange | straightforward | unworn | tags_attached",
+        "sentiment_a": "Positive / Neutral",
+        "sentiment_b": "Positive (1/10) — relaxed, cooperative. Standard exchange request. No friction.",
+        "response_a": "Hi, No problem! We can exchange the jeans for the next size up. Please use our online returns portal to initiate the exchange. Once we receive the return, we will dispatch the new size.",
+        "response_b": "Hi [Customer Name], Of course — happy to sort that for you! I've noted the exchange request for your order #ORD-55009. Just pop them in any packaging with the prepaid returns label I've emailed you, and once we receive them we'll get the next size dispatched straight away. Should be with you within 3-5 days of us receiving the return. Enjoy your new jeans!",
+        "escalation_a": "Score: 1/10. Routine exchange.",
+        "escalation_b": "Score: 1/10. Routine, cooperative size exchange. Automation-eligible.",
+    },
+]
+
+
+def check_backend():
+    print("[check] Connecting to Forkmark backend...")
+    try:
+        r = httpx.get(BASE_URL + "/api/stats", timeout=5)
+        r.raise_for_status()
+        print(f"[check] ✓ Backend reachable at {BASE_URL}")
+    except:
+        print(f"\n[error] Cannot reach {BASE_URL}/api/stats")
+        print("  Make sure the Forkmark backend is running:")
+        print("  cd forkmark && uvicorn backend.main:app --reload\n")
+        sys.exit(1)
+
+    # Auto-bootstrap an API key if none was provided via environment
+    if "X-API-Key" not in HEADERS:
+        print("[check] No FORKMARK_API_KEY set — bootstrapping one...")
+        try:
+            kr = httpx.post(
+                BASE_URL + "/api/keys",
+                json={"name": "demo-seeder"},
+                headers={"Content-Type": "application/json"},
+                timeout=10,
+            )
+            kr.raise_for_status()
+            raw_key = kr.json().get("raw_key", "")
+            if raw_key:
+                HEADERS["X-API-Key"] = raw_key
+                print(f"[check] ✓ API key created: {raw_key[:12]}...\n")
+            else:
+                print("[error] Could not bootstrap API key (no raw_key in response)")
+                print("  Set FORKMARK_API_KEY or create a key via the UI.")
+                sys.exit(1)
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 401:
+                # Keys already exist — can't create without an existing key
+                print("[error] API keys already exist. Provide one via FORKMARK_API_KEY env var.")
+                print("  Or run via: python run_all_demos.py (which bootstraps a shared key)")
+                sys.exit(1)
+            raise
+        except Exception as e:
+            print(f"[error] Could not bootstrap API key: {e}")
+            print("  Set FORKMARK_API_KEY env var or create a key manually.")
+            sys.exit(1)
+
+
+def seed():
+    check_backend()
+
+    print("═" * 65)
+    print("  FORKMARK RETAIL DEMO SEEDER")
+    print("  Customer Support Triage — 15 Tickets × 4 Steps")
+    print("═" * 65 + "\n")
+
+    # 1 ── Create workflow
+    print("[1/4] Creating workflow...")
+    wf = api("post", "/api/workflows", {
+        "name": "retail-support-pipeline",
+        "description": "4-step customer support triage: intent classification, sentiment analysis, response drafting, escalation scoring.",
+    })
+    if not wf:
+        # Try to get existing
+        wfs = api("get", "/api/workflows")
+        wf  = next((w for w in (wfs or []) if w["name"] == "retail-support-pipeline"), None)
+    if not wf:
+        print("[error] Could not create or find workflow.")
+        sys.exit(1)
+    wf_id = wf["id"]
+    print(f"       workflow id: {wf_id}\n")
+
+    # 2 ── Create eval run
+    print("[2/4] Creating eval run...")
+    er = api("post", "/api/eval-runs", {
+        "workflow_name": "retail-support-pipeline",
+        "name": "GPT-4o-mini vs GPT-4o — Customer Support Triage",
+        "description": "Evaluating whether upgrading from GPT-4o-mini to GPT-4o improves response quality, escalation accuracy, and sentiment detection across our retail customer support pipeline.",
+        "branch_a_config": {"label": "GPT-4o-mini (Baseline)", "model_id": "gpt-4o-mini", "temperature": 0.3},
+        "branch_b_config": {"label": "GPT-4o (Challenger)", "model_id": "gpt-4o", "temperature": 0.3},
+        "total_cases": len(TICKETS),
+    })
+    if not er:
+        print("[error] Could not create eval run.")
+        sys.exit(1)
+    er_id = er["id"]
+    print(f"       eval run id: {er_id}\n")
+
+    # 3 ── Seed comparisons
+    print(f"[3/4] Seeding {len(TICKETS)} test cases (4 steps each)...")
+    print()
+
+    for i, t in enumerate(TICKETS):
+        print(f"  [{i+1:02d}/{len(TICKETS)}] {t['label']}")
+
+        # Create workflow run
+        run = api("post", "/api/sdk/runs", {
+            "workflow_name":   "retail-support-pipeline",
+            "input_data":      {"text": t["text"], "ticket_id": t["ticket_id"], "tier": t["tier"], "channel": t["channel"], "label": t["label"]},
+            "eval_run_id":     er_id,
+            "test_case_label": t["label"],
+        })
+        if not run:
+            print(f"         [skip] run creation failed")
+            continue
+        run_id = run["id"]
+
+        # Create Branch A
+        ba = api("post", "/api/sdk/branches", {
+            "run_id": run_id, "name": "gpt-4o-mini@0.3", "model_id": "gpt-4o-mini",
+            "temperature": 0.3, "is_baseline": True,
+        })
+        # Create Branch B
+        bb = api("post", "/api/sdk/branches", {
+            "run_id": run_id, "name": "gpt-4o@0.3", "model_id": "gpt-4o",
+            "temperature": 0.3, "is_baseline": False,
+        })
+        if not ba or not bb:
+            print(f"         [skip] branch creation failed")
+            continue
+        ba_id = ba["id"]
+        bb_id = bb["id"]
+
+        # Log 4 steps for each branch
+        steps = [
+            ("intent_classification", t["intent_a"],    t["intent_b"]),
+            ("sentiment_analysis",    t["sentiment_a"], t["sentiment_b"]),
+            ("response_drafting",     t["response_a"],  t["response_b"]),
+            ("escalation_scoring",    t["escalation_a"],t["escalation_b"]),
+        ]
+        for idx, (step_name, out_a, out_b) in enumerate(steps):
+            msg_user = [{"role": "user", "content": t["text"]}]
+            api("post", "/api/sdk/steps", {
+                "run_id": run_id, "branch_id": ba_id,
+                "step_name": step_name, "step_index": idx,
+                "input_messages": msg_user, "output_text": out_a,
+                "model_id": "gpt-4o-mini", "temperature": 0.3,
+                "tokens_input": 120 + len(t["text"]) // 4,
+                "tokens_output": len(out_a.split()),
+                "latency_ms": 180 + idx * 40,
+            })
+            api("post", "/api/sdk/steps", {
+                "run_id": run_id, "branch_id": bb_id,
+                "step_name": step_name, "step_index": idx,
+                "input_messages": msg_user, "output_text": out_b,
+                "model_id": "gpt-4o", "temperature": 0.3,
+                "tokens_input": 120 + len(t["text"]) // 4,
+                "tokens_output": len(out_b.split()),
+                "latency_ms": 340 + idx * 60,
+            })
+
+        # Complete run + create comparison
+        api("post", f"/api/sdk/runs/{run_id}/complete", {"status": "completed"})
+        comp = api("post", "/api/sdk/comparisons", {
+            "run_id": run_id,
+            "branch_a_id": ba_id,
+            "branch_b_id": bb_id,
+            "eval_run_id": er_id,
+            "test_case_label": t["label"],
+        })
+
+        if comp:
+            div_score = comp.get("divergence_score", 0) or 0
+            bar = "█" * int(div_score * 20) + "░" * (20 - int(div_score * 20))
+            emoji = "🟢" if div_score < 0.2 else "🟡" if div_score < 0.5 else "🔴"
+            print(f"         {emoji} divergence: {bar}  {div_score:.0%}")
+
+    # 4 ── Complete eval run
+    print()
+    print("[4/4] Completing eval run...")
+    api("patch", f"/api/eval-runs/{er_id}/complete", {
+        "status": "completed",
+        "total_cases": len(TICKETS),
+    })
+
+    print()
+    print("═" * 65)
+    print("  DONE! Dashboard is ready.")
+    print("═" * 65)
+    print()
+    print("  Open Forkmark:  http://localhost:5173")
+    print(f"  Eval Run ID:     {er_id}")
+    print()
+    print("  What to explore:")
+    print("  ┌─────────────────────────────────────────────────────────┐")
+    print("  │  1. Dashboard → see the eval run in 'Recent Eval Runs'  │")
+    print("  │  2. Eval Runs → click the run → divergence histogram    │")
+    print("  │  3. Click 'Review Next →' → work through highest-div    │")
+    print("  │     comparisons (safety incident, legal threat = 85%+)  │")
+    print("  │  4. See 4 steps side-by-side per ticket                 │")
+    print("  │  5. Record your decision: A wins / B wins / etc.        │")
+    print("  │  6. Use filter 'High Δ' to jump to critical cases       │")
+    print("  └─────────────────────────────────────────────────────────┘")
+    print()
+    print("  Highest divergence tickets to review first:")
+    print("  • allergy-safety-concern     — GPT-4o spots regulatory risk")
+    print("  • threat-legal-action        — GPT-4o escalates to Score 10/10")
+    print("  • bulk-order-issue           — GPT-4o identifies business impact")
+    print("  • vip-damaged-product        — GPT-4o adds loyalty gesture")
+    print("  • angry-late-delivery        — GPT-4o adds compensation + apology")
+    print()
+
+
+if __name__ == "__main__":
+    seed()

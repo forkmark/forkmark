@@ -1,0 +1,47 @@
+version: "3.9"
+
+# ── Forkmark — simple single-container stack ─────────────────────────────────
+#
+# No TLS, no PostgreSQL, no nginx required.
+# Uses SQLite (data persisted in the "forkmark_data" volume).
+#
+# Start:  run.bat          (Windows)
+#         docker compose -f docker-compose.simple.yml up --build -d
+#
+# Stop:   stop.bat         (Windows)
+#         docker compose -f docker-compose.simple.yml down
+#
+# Open http://localhost:7700 in your browser.
+#
+# Optional — set these in a .env file next to this file to enable AI features:
+#   OPENAI_API_KEY=sk-...     (model comparisons / LLM judge scoring)
+
+services:
+  forkmark:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple
+    container_name: forkmark
+    restart: unless-stopped
+    ports:
+      - "7700:7700"
+    volumes:
+      - forkmark_data:/data
+    environment:
+      FM_HOST: "0.0.0.0"
+      FM_PORT: "7700"
+      FM_DB_PATH: "/data/forkmark.db"
+      FM_RATE_LIMIT: "5000"   # raised for demo seeding (default 1000)
+      # Pass through OpenAI key from host .env if present
+      OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+      FM_OPENAI_API_KEY: "${OPENAI_API_KEY:-}"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+volumes:
+  forkmark_data:
+    driver: local

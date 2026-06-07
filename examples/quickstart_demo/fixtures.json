@@ -1,0 +1,207 @@
+{
+  "demo_name": "quickstart",
+  "display_name": "Quick Start — Full Platform Tour",
+  "lifecycle_demo": true,
+  "workflow": {
+    "name": "quickstart-content-qa",
+    "description": "End-to-end content quality pipeline: draft, fact-check, tone analysis, final edit. Showcases all Forkmark features including decisions, reviewer workflows, test sets, comments, and export."
+  },
+  "eval_run": {
+    "name": "Claude 3.5 Sonnet vs GPT-4o — Content QA Pipeline",
+    "description": "Full lifecycle evaluation comparing Claude 3.5 Sonnet and GPT-4o across a 4-step content quality pipeline. Includes human review decisions, reviewer assignments, threaded comments, test set management, and DPO export."
+  },
+  "branch_a": {
+    "label": "GPT-4o (Baseline)",
+    "name": "gpt-4o@0.4",
+    "model_id": "gpt-4o",
+    "temperature": 0.4,
+    "is_baseline": true
+  },
+  "branch_b": {
+    "label": "Claude 3.5 Sonnet (Challenger)",
+    "name": "claude-3.5-sonnet@0.4",
+    "model_id": "claude-3-5-sonnet-20241022",
+    "temperature": 0.4,
+    "is_baseline": false
+  },
+  "steps": [
+    "draft_generation",
+    "fact_checking",
+    "tone_analysis",
+    "final_edit"
+  ],
+  "input_field": "topic",
+  "step_field_map": {
+    "draft_generation": ["draft_a", "draft_b"],
+    "fact_checking": ["facts_a", "facts_b"],
+    "tone_analysis": ["tone_a", "tone_b"],
+    "final_edit": ["edit_a", "edit_b"]
+  },
+  "test_set": {
+    "name": "Content QA Golden Set v1",
+    "description": "Curated test cases for content quality evaluation. Mix of technical, creative, and compliance-sensitive topics."
+  },
+  "reviewers": [
+    {
+      "id": "alice-editor",
+      "display_name": "Alice Chen",
+      "role": "domain_expert",
+      "expertise_level": "expert",
+      "domain_expertise": ["content-strategy", "editorial", "brand-voice"]
+    },
+    {
+      "id": "bob-ml",
+      "display_name": "Bob Patel",
+      "role": "ml_engineer",
+      "expertise_level": "expert",
+      "domain_expertise": ["llm-evaluation", "nlp", "fine-tuning"]
+    },
+    {
+      "id": "carol-pm",
+      "display_name": "Carol Zhang",
+      "role": "product_manager",
+      "expertise_level": "intermediate",
+      "domain_expertise": ["user-experience", "content-ops", "compliance"]
+    }
+  ],
+  "decisions": [
+    {
+      "case_index": 0,
+      "reviewer_id": "alice-editor",
+      "choice": "B",
+      "confidence": "high",
+      "rationale_for_choice": "Claude's draft captures a more natural, engaging tone while maintaining technical accuracy. The structure flows better with clear transitions between key points. Fact-checking is thorough with proper sourcing.",
+      "rationale_for_rejection": "GPT-4o's draft is competent but reads more like a textbook than a blog post. The tone is somewhat stiff and the transitions between sections feel mechanical.",
+      "tags": ["better-tone", "stronger-structure"]
+    },
+    {
+      "case_index": 1,
+      "reviewer_id": "bob-ml",
+      "choice": "A",
+      "confidence": "medium",
+      "rationale_for_choice": "GPT-4o provides more precise technical details in the fact-checking step, catching a subtle error in the challenger's output about model parameter counts. The final edit preserves accuracy better.",
+      "rationale_for_rejection": "Claude's output has slightly better readability but introduces a factual inaccuracy about training data sizes that would require correction.",
+      "tags": ["accuracy-critical", "technical-precision"]
+    },
+    {
+      "case_index": 2,
+      "reviewer_id": "carol-pm",
+      "choice": "B",
+      "confidence": "high",
+      "rationale_for_choice": "Claude's compliance-aware tone analysis catches regulatory language issues that GPT-4o misses entirely. The final edit properly flags terms that need legal review. This is the clear winner for regulated content.",
+      "rationale_for_rejection": "GPT-4o's output would pass basic editorial review but misses critical compliance considerations that could expose the company to regulatory risk.",
+      "tags": ["compliance-critical", "regulatory-awareness"]
+    },
+    {
+      "case_index": 3,
+      "reviewer_id": "alice-editor",
+      "choice": "both",
+      "confidence": "low",
+      "rationale_for_choice": "Both models produce acceptable creative content for this topic. Minor stylistic differences don't meaningfully impact quality. Would need A/B testing with real users to differentiate.",
+      "rationale_for_rejection": "",
+      "tags": ["needs-user-testing"]
+    },
+    {
+      "case_index": 4,
+      "reviewer_id": "bob-ml",
+      "choice": "B",
+      "confidence": "high",
+      "rationale_for_choice": "Claude handles the multi-language content requirement significantly better, maintaining consistent quality across the English and Spanish sections. The tone analysis correctly identifies cultural nuance differences.",
+      "rationale_for_rejection": "GPT-4o's Spanish output contains awkward phrasing and the tone analysis misses several cultural context issues that would be noticeable to native speakers.",
+      "tags": ["multilingual", "cultural-awareness"]
+    }
+  ],
+  "comments": [
+    {
+      "case_index": 0,
+      "author_id": "alice-editor",
+      "author_name": "Alice Chen",
+      "body": "This is a clear example of where Claude excels at maintaining brand voice. Notice how it mirrors the casual-yet-authoritative tone from our style guide. GPT-4o defaults to a more generic informational tone."
+    },
+    {
+      "case_index": 0,
+      "author_id": "bob-ml",
+      "author_name": "Bob Patel",
+      "body": "Agreed on the tone, but I want to flag that Claude's fact-checking step missed a version number. We should add a structured verification substep.",
+      "parent_index": 0
+    },
+    {
+      "case_index": 2,
+      "author_id": "carol-pm",
+      "author_name": "Carol Zhang",
+      "body": "Flagging this as a priority case for our compliance team review. The difference in regulatory awareness between the two models is significant and could impact our go/no-go decision."
+    }
+  ],
+  "cases": [
+    {
+      "label": "ai-trends-blog-post",
+      "topic": "Write a 500-word blog post about the top 3 AI trends for enterprise adoption in 2025, targeting a CTO audience.",
+      "category": "technical-content",
+      "priority": "high",
+      "draft_a": "The enterprise AI landscape continues to evolve rapidly. Here are the top three trends CTOs should watch in 2025.\n\n1. Agentic AI Workflows: Organizations are moving beyond simple chatbots to autonomous agent systems. These AI agents can handle complex multi-step tasks like incident response, code review, and customer onboarding. Gartner predicts that by 2028, 33% of enterprise software will include agentic AI.\n\n2. RAG 2.0 and Knowledge Management: Retrieval-Augmented Generation has matured significantly. Modern RAG systems now incorporate semantic chunking, hybrid search, and real-time knowledge graph updates. This enables more accurate, citation-backed responses.\n\n3. AI Governance and Compliance: With the EU AI Act and similar regulations, governance is no longer optional. CTOs need robust frameworks for model monitoring, bias detection, and audit trails.",
+      "draft_b": "If you're a CTO wondering where to place your AI bets in 2025, three trends stand out from the noise — and they're reshaping how enterprises actually ship AI, not just talk about it.\n\nFirst up: agentic AI is graduating from demo to production. We're seeing engineering teams deploy AI agents that don't just answer questions but actually execute workflows — triaging support tickets, running CI pipelines, even drafting procurement specs. The shift from 'AI as copilot' to 'AI as teammate' is real, and Gartner's latest numbers suggest 33% of enterprise software will embed agentic capabilities by 2028.\n\nSecond: RAG has grown up. The first wave of RAG was 'stuff documents into a vector DB and hope for the best.' RAG 2.0 brings semantic chunking, hybrid retrieval, and live knowledge graph sync. The result? Responses that cite their sources and actually stay current.\n\nThird — and this is the one that keeps legal teams up at night — AI governance. The EU AI Act is here, and it has teeth. If your org doesn't have model monitoring, bias detection, and a clear audit trail, you're flying blind into regulatory headwinds.",
+      "facts_a": "VERIFIED: Gartner 33% statistic is from Q3 2024 report on agentic AI. VERIFIED: EU AI Act timeline is accurate. VERIFIED: RAG terminology is correct. FLAG: 'By 2028' — should verify this is the latest projection. Overall accuracy: 95%",
+      "facts_b": "VERIFIED: Gartner 33% statistic is from Q3 2024 report. VERIFIED: EU AI Act reference is accurate and timely. VERIFIED: RAG evolution description matches current industry state. NOTE: Strong use of concrete examples (CI pipelines, procurement) adds credibility. Overall accuracy: 97%",
+      "tone_a": "TONE: Formal/informational. Reads like an analyst report. Appropriate for whitepapers but may be too dry for a blog targeting busy CTOs. ENGAGEMENT: Medium — list format is scannable but lacks hooks. BRAND ALIGNMENT: Neutral — doesn't reflect any particular brand voice.",
+      "tone_b": "TONE: Conversational-authoritative. Matches a 'smart friend who happens to be an expert' voice. Strong opening hook addresses the reader directly. ENGAGEMENT: High — uses 'you', concrete examples, and light humor ('hope for the best', 'keeps legal teams up at night'). BRAND ALIGNMENT: Strong fit for modern tech brand voice.",
+      "edit_a": "The enterprise AI landscape continues to evolve rapidly. Here are the top three trends CTOs should watch in 2025.\n\n**1. Agentic AI Workflows**\nOrganizations are moving beyond simple chatbots to autonomous agent systems. These AI agents can handle complex multi-step tasks like incident response, code review, and customer onboarding. According to Gartner, 33% of enterprise software will include agentic AI by 2028.\n\n**2. RAG 2.0 and Knowledge Management**\nRetrieval-Augmented Generation has matured significantly. Modern RAG systems now incorporate semantic chunking, hybrid search, and real-time knowledge graph updates, enabling more accurate, citation-backed responses.\n\n**3. AI Governance and Compliance**\nWith the EU AI Act taking effect, governance is no longer optional. CTOs need robust frameworks for model monitoring, bias detection, and audit trails.\n\n*Ready to evaluate which AI approach fits your stack? Start with a small pilot and measure what matters.*",
+      "edit_b": "If you're a CTO wondering where to place your AI bets in 2025, three trends stand out — and they're reshaping how enterprises actually ship AI, not just talk about it.\n\n**Agentic AI: From Copilot to Teammate**\nEngineering teams are deploying AI agents that execute real workflows: triaging support tickets, running CI pipelines, even drafting procurement specs. Gartner projects 33% of enterprise software will embed agentic capabilities by 2028.\n\n**RAG 2.0: Retrieval That Actually Works**\nFirst-wave RAG was 'stuff documents into a vector DB.' The next generation brings semantic chunking, hybrid retrieval, and live knowledge graph sync — with responses that cite sources and stay current.\n\n**AI Governance: No Longer Optional**\nThe EU AI Act has teeth. Without model monitoring, bias detection, and clear audit trails, you're flying blind into regulatory headwinds.\n\n*The playbook? Start small, measure ruthlessly, and build your governance framework before the auditors come knocking.*"
+    },
+    {
+      "label": "ml-model-comparison-technical",
+      "topic": "Write a technical comparison of transformer vs. state-space models (Mamba) for sequence modeling, targeting ML engineers. Include concrete benchmark numbers.",
+      "category": "technical-deep-dive",
+      "priority": "high",
+      "draft_a": "Transformer architectures have dominated sequence modeling since 2017, but state-space models like Mamba (Gu & Dao, 2023) present a compelling alternative with linear-time complexity.\n\nKey Differences:\n- Attention complexity: Transformers are O(n²) in sequence length; Mamba achieves O(n) through selective state spaces\n- Memory: Mamba uses ~3x less GPU memory for sequences >8K tokens\n- Throughput: On A100 GPUs, Mamba-2.8B achieves 5x higher throughput than Transformer-2.8B at 16K context\n\nBenchmarks (from original paper):\n- LAMBADA: Mamba-2.8B: 65.5% vs GPT-Neo 2.7B: 62.2%\n- HellaSwag: Mamba-2.8B: 66.1% — competitive with transformers at same scale\n\nHowever, Mamba has limitations: weaker in-context learning for novel tasks, less mature tooling ecosystem, and fewer pre-trained checkpoints available.",
+      "draft_b": "The transformer vs. SSM debate has gotten interesting since Mamba dropped. Let's cut through the hype with actual numbers.\n\nMamba's core innovation is replacing attention's O(n²) complexity with a selective state-space mechanism that runs in O(n). In practice, this means:\n\n- At 16K context on A100: Mamba-2.8B pushes ~5x the throughput of a comparable transformer\n- Memory footprint: ~3x reduction for long sequences (>8K tokens)\n- Training efficiency: Mamba converges in roughly 30% fewer steps on language modeling tasks\n\nOn standard benchmarks, Mamba-2.8B holds its own: 65.5% on LAMBADA (vs GPT-Neo 2.7B's 62.2%), 66.1% on HellaSwag. Not a blowout, but competitive at the same parameter count.\n\nThe real question is where each architecture shines:\n- Transformers: superior in-context learning, rich ecosystem (LoRA, PEFT, vLLM), battle-tested at scale\n- Mamba: long-context champion, lower inference cost, promising for edge deployment\n\nMy take: hybrid architectures (Jamba, StripedHyena) will likely win. Pure SSMs need better tooling before they're production-ready for most teams.",
+      "facts_a": "VERIFIED: O(n²) vs O(n) complexity is correct. VERIFIED: Mamba paper citation (Gu & Dao, 2023) is accurate. VERIFIED: LAMBADA and HellaSwag numbers match the published paper. FLAG: '~3x less GPU memory' — this varies by implementation; 2-4x range is more accurate. Overall accuracy: 93%",
+      "facts_b": "VERIFIED: All benchmark numbers match published results. VERIFIED: Architecture comparison is technically sound. VERIFIED: Jamba and StripedHyena are real hybrid architectures. FLAG: '30% fewer steps' claim needs citation — this appears to be an approximation, not a published benchmark. NOTE: Mention of LoRA, PEFT, vLLM adds useful practical context. Overall accuracy: 91%",
+      "tone_a": "TONE: Academic/reference. Structured like a technical report. Good for documentation but lacks the engaging voice expected in a technical blog. ENGAGEMENT: Medium — information-dense but dry. BRAND ALIGNMENT: Neutral.",
+      "tone_b": "TONE: Practitioner/opinionated. Reads like a senior ML engineer sharing their assessment. 'Let's cut through the hype' sets expectations well. ENGAGEMENT: High — includes personal take, practical recommendations. BRAND ALIGNMENT: Strong for developer-focused brand.",
+      "edit_a": "**Transformer vs. Mamba: Architecture Comparison for Sequence Modeling**\n\nTransformer architectures have dominated sequence modeling since 2017, but state-space models like Mamba (Gu & Dao, 2023) offer linear-time complexity as an alternative.\n\n**Complexity & Performance**\n- Attention: O(n²) (Transformer) vs O(n) (Mamba)\n- Memory: 2-4x reduction for sequences >8K tokens\n- Throughput: ~5x on A100 at 16K context (Mamba-2.8B vs Transformer-2.8B)\n\n**Benchmarks**\n- LAMBADA: Mamba-2.8B 65.5% vs GPT-Neo 2.7B 62.2%\n- HellaSwag: Mamba-2.8B 66.1% — competitive at scale\n\n**Limitations**: Weaker in-context learning, less mature tooling, fewer pre-trained checkpoints.",
+      "edit_b": "**Transformer vs. Mamba: What the Numbers Actually Say**\n\nMamba replaces attention's O(n²) with a selective state-space mechanism running in O(n). Here's what that means in practice:\n\n| Metric | Transformer | Mamba | Delta |\n|--------|------------|-------|-------|\n| Throughput (A100, 16K) | 1x | ~5x | Mamba |\n| Memory (>8K seq) | Baseline | 2-4x less | Mamba |\n| LAMBADA (2.8B) | 62.2% | 65.5% | Mamba |\n| In-context learning | Strong | Weaker | Transformer |\n| Tooling ecosystem | Mature | Early | Transformer |\n\n**Where each wins**: Transformers for in-context learning and production tooling (LoRA, vLLM). Mamba for long-context workloads and edge deployment.\n\n**Prediction**: Hybrid architectures like Jamba will converge the best of both."
+    },
+    {
+      "label": "compliance-healthcare-draft",
+      "topic": "Draft a patient communication about a new telehealth service. Must comply with HIPAA guidelines and be written at a 6th-grade reading level.",
+      "category": "compliance-content",
+      "priority": "critical",
+      "draft_a": "Dear Patient,\n\nWe are pleased to inform you that our healthcare system now offers telehealth services. Telehealth allows you to see your doctor through video calls from the comfort of your home.\n\nHow it works:\n1. Schedule an appointment through our patient portal\n2. At your appointment time, click the link in your email\n3. Talk to your doctor through secure video\n\nYour information is protected. We use encrypted video calls that meet all HIPAA requirements.\n\nPlease contact us at (555) 123-4567 if you have questions.\n\nSincerely,\nYour Healthcare Team",
+      "draft_b": "Hi there,\n\nGreat news — you can now see your doctor from home using video visits!\n\nHere's how it works:\n1. Book a visit on our website or call us\n2. We'll send you a link by email\n3. Click the link at your visit time to talk to your doctor face-to-face on your phone or computer\n\nIs it safe? Yes! Your video visit is private and secure. We protect your health information the same way we do when you visit us in person.\n\nWhat you'll need:\n- A phone, tablet, or computer with a camera\n- A quiet, private space\n- Your insurance card (if applicable)\n\nQuestions? Call us at (555) 123-4567 or ask at your next visit.\n\nWe're here for you,\nYour Care Team",
+      "facts_a": "VERIFIED: Telehealth service description is appropriate. HIPAA CHECK: Mentions encryption and HIPAA compliance explicitly. READING LEVEL: Flesch-Kincaid grade 7.2 — slightly above target. FLAG: Should not reference 'HIPAA' by name in patient-facing materials — patients don't need to know the regulation name. Overall compliance: 85%",
+      "facts_b": "VERIFIED: Service description is clear and actionable. HIPAA CHECK: Appropriately describes privacy without naming HIPAA — uses patient-friendly language ('private and secure', 'protect your health information'). READING LEVEL: Flesch-Kincaid grade 5.8 — within target range. NOTE: Practical checklist (what you'll need) reduces call volume. Overall compliance: 96%",
+      "tone_a": "TONE: Formal/institutional. 'Dear Patient' and 'Sincerely' feel dated for modern healthcare communication. READABILITY: Acceptable but slightly above 6th-grade target. ACCESSIBILITY: Missing practical preparation info (what device, what to have ready). COMPLIANCE: Names HIPAA directly — not recommended for patient materials.",
+      "tone_b": "TONE: Warm/approachable. 'Hi there' and 'We're here for you' create a welcoming feel. READABILITY: Meets 6th-grade target (Flesch-Kincaid 5.8). ACCESSIBILITY: Excellent — includes device requirements, suggests private space. COMPLIANCE: Describes privacy protections in plain language without regulatory jargon. Strong patient-centered approach.",
+      "edit_a": "Dear Patient,\n\nYou can now see your doctor from home using video visits.\n\n**How to get started:**\n1. Schedule through our patient portal or call us\n2. Check your email for a video link\n3. Click the link at your appointment time\n\nYour visit is private and secure. We protect your health information just like we do in our offices.\n\nQuestions? Call (555) 123-4567.\n\nYour Healthcare Team",
+      "edit_b": "Hi there,\n\nYou can now see your doctor from home using video visits — it's easy, private, and secure.\n\n**Getting started is simple:**\n1. Book a visit online or call us at (555) 123-4567\n2. We'll email you a link before your visit\n3. Click the link to talk to your doctor face-to-face\n\n**What you'll need:**\n- A phone, tablet, or computer with a camera\n- A quiet, private spot\n- Your insurance card (if you have one)\n\nYour health information is protected — we keep your video visits just as safe as in-person visits.\n\nWe're here for you,\nYour Care Team"
+    },
+    {
+      "label": "creative-product-launch",
+      "topic": "Write launch copy for a new AI-powered code review tool called 'ReviewBot'. Target audience: engineering managers at mid-size companies (100-500 engineers).",
+      "category": "marketing-creative",
+      "priority": "medium",
+      "draft_a": "Introducing ReviewBot — AI-Powered Code Review for Growing Engineering Teams\n\nReviewBot uses advanced AI to review pull requests automatically, helping your team ship faster without sacrificing code quality.\n\nKey Features:\n- Automated PR reviews in under 2 minutes\n- Catches bugs, security vulnerabilities, and style issues\n- Integrates with GitHub, GitLab, and Bitbucket\n- Learns your team's coding standards over time\n\nWhy Engineering Managers Choose ReviewBot:\n- Reduce review bottlenecks by 60%\n- Free up senior engineers for architecture and mentoring\n- Consistent quality standards across all teams\n\nStart your free trial at reviewbot.dev",
+      "draft_b": "Your senior engineers are spending 15+ hours a week on code reviews.\n\nWhat if they could spend that time on architecture, mentoring, and the work that actually moves the needle?\n\nReviewBot handles the first pass so your team can focus on what matters. It catches bugs, flags security issues, and enforces your style guide — all in under 2 minutes per PR.\n\nBuilt for teams that are scaling:\n→ 100-500 engineers? ReviewBot adapts to your codebase and standards\n→ GitHub, GitLab, Bitbucket — drop it into your existing workflow\n→ Your senior reviewers still make the calls. ReviewBot just does the legwork.\n\nEngineering managers at Stripe, Datadog, and Notion have reduced review bottlenecks by 60%.\n\nStart your free trial → reviewbot.dev",
+      "facts_a": "VERIFIED: Feature claims are generic but reasonable for AI code review tools. FLAG: '60% reduction in bottlenecks' — this is a bold claim that needs substantiation or attribution. No social proof provided. Overall accuracy: 80%",
+      "facts_b": "VERIFIED: Feature descriptions are accurate for the product category. FLAG: 'Stripe, Datadog, and Notion' — these customer names must be verified with legal/partnerships. FLAG: '15+ hours a week' statistic needs citation. FLAG: '60% bottleneck reduction' needs source. NOTE: Claims are more specific but carry higher verification burden. Overall accuracy: 75%",
+      "tone_a": "TONE: Standard SaaS marketing. Professional but forgettable — reads like every other dev tool landing page. ENGAGEMENT: Low-medium — list format is scannable but doesn't create urgency. BRAND: Generic.",
+      "tone_b": "TONE: Problem-first, conversational. Opens with a pain point that engineering managers will immediately recognize. ENGAGEMENT: High — uses 'your', creates contrast between current state and desired state. BRAND: Distinctive, memorable. NOTE: Customer name-drops add credibility but require legal clearance.",
+      "edit_a": "**Introducing ReviewBot — AI Code Review for Growing Teams**\n\nReviewBot reviews pull requests automatically, helping your team ship faster without sacrificing quality.\n\n- Automated reviews in under 2 minutes\n- Catches bugs, security issues, and style violations\n- Integrates with GitHub, GitLab, and Bitbucket\n- Learns your team's standards over time\n\nReduce review bottlenecks. Free up your senior engineers.\n\nStart free → reviewbot.dev",
+      "edit_b": "Your senior engineers are spending 15+ hours a week reviewing code.\n\nWhat if they could spend that time on architecture and mentoring instead?\n\n**ReviewBot handles the first pass.** It catches bugs, flags security issues, and enforces your style guide — in under 2 minutes per PR.\n\n→ Built for 100-500 engineer teams\n→ Drops into GitHub, GitLab, or Bitbucket\n→ Your reviewers still make the calls. ReviewBot does the legwork.\n\n[Customer logos with permission]\n\nStart your free trial → reviewbot.dev"
+    },
+    {
+      "label": "multilingual-onboarding-guide",
+      "topic": "Create an employee onboarding guide section about using the company's internal AI tools, with parallel English and Spanish versions. Must be culturally appropriate for both US and Latin American offices.",
+      "category": "internal-comms",
+      "priority": "medium",
+      "draft_a": "Using Company AI Tools\n\nOur company provides several AI tools to help you work more efficiently. Here's how to get started:\n\n1. ChatAssist: Our internal chatbot for HR and IT questions. Access it at chat.internal.co\n2. DocSummarize: Upload documents to get AI-generated summaries. Available in the Tools menu.\n3. CodeHelper: AI pair programming assistant integrated with your IDE.\n\nGuidelines:\n- Never input confidential customer data into any AI tool\n- Always review AI outputs before sharing externally\n- Report any concerning AI outputs to the AI Ethics team\n\n---\n\nUso de Herramientas de IA de la Empresa\n\nNuestra empresa proporciona varias herramientas de IA para ayudarle a trabajar de manera más eficiente.\n\n1. ChatAssist: Nuestro chatbot interno para preguntas de RH y TI.\n2. DocSummarize: Suba documentos para obtener resúmenes generados por IA.\n3. CodeHelper: Asistente de programación integrado con su IDE.\n\nDirectrices:\n- Nunca ingrese datos confidenciales de clientes en ninguna herramienta de IA\n- Siempre revise las respuestas de IA antes de compartirlas externamente\n- Reporte cualquier resultado preocupante al equipo de Ética de IA",
+      "draft_b": "Welcome to Your AI Toolkit\n\nWe've built a suite of AI tools to make your day-to-day easier — here's the quick-start version:\n\nChatAssist → Your first stop for HR and IT questions\nAccess: chat.internal.co | Available 24/7 | Supports English & Spanish\n\nDocSummarize → Turn long documents into actionable summaries\nAccess: Tools menu in your dashboard | Handles PDFs, Docs, and Slides\n\nCodeHelper → AI pair programmer right in your IDE\nAccess: Pre-installed in VS Code and JetBrains | Start typing to activate\n\nA few important ground rules:\n✓ Always review AI outputs before sharing with anyone outside the company\n✓ Never paste customer data, PII, or financial details into any AI tool\n✓ Questions about appropriate use? Reach out to ai-ethics@company.co\n\n---\n\nBienvenido/a a tus herramientas de IA\n\nHemos creado un conjunto de herramientas de IA para facilitar tu día a día. Aquí va la guía rápida:\n\nChatAssist → Tu primer recurso para preguntas de RH y TI\nAcceso: chat.internal.co | Disponible 24/7 | Soporte en inglés y español\n\nDocSummarize → Convierte documentos largos en resúmenes prácticos\nAcceso: Menú de Herramientas en tu panel | Compatible con PDFs, Docs y Slides\n\nCodeHelper → Asistente de programación con IA directo en tu IDE\nAcceso: Pre-instalado en VS Code y JetBrains | Empieza a escribir para activarlo\n\nReglas importantes:\n✓ Siempre revisa lo que genera la IA antes de compartirlo fuera de la empresa\n✓ Nunca pegues datos de clientes, información personal o datos financieros en ninguna herramienta de IA\n✓ ¿Dudas sobre el uso apropiado? Escríbenos a ai-ethics@company.co",
+      "facts_a": "VERIFIED: Tool descriptions are internally consistent. LANGUAGE CHECK: Spanish translation is grammatically correct but uses formal 'usted' form — appropriate for some LatAm markets but may feel distant in others. CULTURAL: No cultural adaptation beyond direct translation. ACCESSIBILITY: Missing access details (URLs, availability). Overall quality: 78%",
+      "facts_b": "VERIFIED: Tool descriptions are consistent and include actionable access details. LANGUAGE CHECK: Spanish uses informal 'tú' form with gender-inclusive 'Bienvenido/a' — appropriate for modern corporate LatAm culture. CULTURAL: Includes bilingual support mention in ChatAssist, which is important for LatAm offices. ACCESSIBILITY: Clear access paths for each tool. Overall quality: 94%",
+      "tone_a": "TONE: Formal/procedural. Reads like a policy document rather than a welcome guide. CULTURAL SENSITIVITY: Spanish section is a direct translation with formal register — may feel impersonal in more casual LatAm office cultures. ONBOARDING FIT: Adequate but doesn't create excitement about the tools.",
+      "tone_b": "TONE: Welcoming/practical. 'Welcome to Your AI Toolkit' frames tools as empowering, not restrictive. CULTURAL SENSITIVITY: Spanish uses inclusive language ('Bienvenido/a'), informal register ('tú'), and mentions bilingual support — shows awareness of the LatAm audience. ONBOARDING FIT: Strong — makes new hires feel supported and excited to use the tools.",
+      "edit_a": "**Using Company AI Tools**\n\nHere are the AI tools available to you:\n\n1. **ChatAssist**: Internal chatbot for HR and IT (chat.internal.co)\n2. **DocSummarize**: AI-generated document summaries (Tools menu)\n3. **CodeHelper**: AI pair programming in your IDE\n\nGuidelines:\n- Never input customer data into AI tools\n- Review AI outputs before external sharing\n- Contact ai-ethics@company.co with concerns\n\n---\n\n**Uso de Herramientas de IA**\n\nHerramientas disponibles:\n\n1. **ChatAssist**: Chatbot para preguntas de RH y TI (chat.internal.co)\n2. **DocSummarize**: Resúmenes de documentos (Menú de Herramientas)\n3. **CodeHelper**: Programación asistida en su IDE\n\nDirectrices:\n- No ingrese datos de clientes\n- Revise las respuestas antes de compartirlas\n- Contacte a ai-ethics@company.co con preguntas",
+      "edit_b": "**Welcome to Your AI Toolkit**\n\n| Tool | What It Does | How to Access |\n|------|-------------|---------------|\n| ChatAssist | HR & IT questions | chat.internal.co (24/7, EN/ES) |\n| DocSummarize | Document summaries | Tools menu → Upload |\n| CodeHelper | AI pair programming | Pre-installed in VS Code/JetBrains |\n\n**Ground rules:**\n✓ Review AI outputs before sharing externally\n✓ Never paste customer data or PII\n✓ Questions? ai-ethics@company.co\n\n---\n\n**Bienvenido/a a tus herramientas de IA**\n\n| Herramienta | Qué hace | Cómo acceder |\n|-------------|----------|---------------|\n| ChatAssist | Preguntas de RH y TI | chat.internal.co (24/7, EN/ES) |\n| DocSummarize | Resúmenes de documentos | Menú Herramientas → Subir |\n| CodeHelper | Programación con IA | Pre-instalado en VS Code/JetBrains |\n\n**Reglas importantes:**\n✓ Revisa lo que genera la IA antes de compartir\n✓ Nunca pegues datos de clientes o información personal\n✓ ¿Dudas? ai-ethics@company.co"
+    }
+  ]
+}

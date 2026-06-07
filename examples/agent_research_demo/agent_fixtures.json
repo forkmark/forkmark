@@ -1,0 +1,434 @@
+{
+  "demo_name": "agent_research",
+  "display_name": "Research Agent — Tool Strategy Comparison",
+  "demo_type": "agent",
+  "workflow": {
+    "name": "research-agent-comparison",
+    "description": "Compare two agent strategies for market research tasks: ReAct (iterative reason-act-observe) vs Plan-and-Execute (plan upfront, batch tool calls, synthesize). Demonstrates how different tool sequences can produce equivalent outcomes at different efficiency levels."
+  },
+  "eval_run": {
+    "name": "ReAct vs Plan-and-Execute — Market Research",
+    "description": "Agent trajectory comparison: ReAct strategy iteratively reasons then acts, while Plan-and-Execute creates a full research plan before executing tool calls in batch. Highlights tool sequence divergence with comparable outcome quality."
+  },
+  "branch_a": {
+    "label": "ReAct Strategy (Baseline)",
+    "name": "react-iterative",
+    "model_id": "gpt-4o",
+    "temperature": 0.3,
+    "is_baseline": true
+  },
+  "branch_b": {
+    "label": "Plan-and-Execute Strategy (Challenger)",
+    "name": "plan-execute-batch",
+    "model_id": "gpt-4o",
+    "temperature": 0.3,
+    "is_baseline": false
+  },
+  "cases": [
+    {
+      "label": "competitor-landscape-saas",
+      "input": "Analyze the competitive landscape for AI-powered customer support SaaS tools. Identify the top 5 players, their key differentiators, pricing tiers, and recent funding rounds.",
+      "trace_a": [
+        {
+          "event_type": "reasoning",
+          "name": "initial_thought",
+          "output_data": {"text": "I need to research AI customer support SaaS tools. Let me start by searching for an overview of the market."},
+          "latency_ms": 320,
+          "tokens_input": 180,
+          "tokens_output": 45,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "top AI customer support SaaS tools 2024 market overview"},
+          "output_data": {"results": ["Intercom AI", "Zendesk AI", "Freshdesk Freddy", "Ada", "Tidio AI"]},
+          "latency_ms": 850,
+          "tokens_input": 60,
+          "tokens_output": 280,
+          "cost_usd": 0.004
+        },
+        {
+          "event_type": "reasoning",
+          "name": "reflect_on_results",
+          "output_data": {"text": "I found 5 major players. Now I need to get pricing and differentiator details for each one. Let me search for each individually."},
+          "latency_ms": 280,
+          "tokens_input": 340,
+          "tokens_output": 50,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "Intercom AI pricing plans features 2024"},
+          "output_data": {"results": ["Essential $39/seat, Advanced $99/seat, Expert $139/seat. Key feature: Fin AI agent handles 50% of support volume."]},
+          "latency_ms": 720,
+          "tokens_input": 50,
+          "tokens_output": 200,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "Zendesk AI pricing features competitive analysis"},
+          "output_data": {"results": ["Suite Team $55/agent, Suite Growth $89/agent, Suite Professional $115/agent. Key feature: AI-powered ticket routing and sentiment analysis."]},
+          "latency_ms": 680,
+          "tokens_input": 50,
+          "tokens_output": 210,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "reasoning",
+          "name": "mid_synthesis",
+          "output_data": {"text": "Two competitors researched. Continuing with the remaining three and then I need funding data."},
+          "latency_ms": 250,
+          "tokens_input": 520,
+          "tokens_output": 40,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "Freshdesk Freddy AI pricing features"},
+          "output_data": {"results": ["Growth $15/agent, Pro $49/agent, Enterprise $79/agent. Key feature: Freddy AI for ticket classification and canned response suggestions."]},
+          "latency_ms": 710,
+          "tokens_input": 45,
+          "tokens_output": 190,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "Ada AI chatbot pricing funding round"},
+          "output_data": {"results": ["Custom enterprise pricing. Series C $130M (2022). Key feature: No-code AI agent builder, 70%+ automated resolution rate."]},
+          "latency_ms": 690,
+          "tokens_input": 45,
+          "tokens_output": 180,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "Tidio AI chatbot pricing features funding"},
+          "output_data": {"results": ["Free tier, Starter $29/mo, Growth $59/mo, Tidio+ $499/mo. Series B $25M. Key feature: Lyro AI conversational chatbot."]},
+          "latency_ms": 650,
+          "tokens_input": 45,
+          "tokens_output": 170,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "reasoning",
+          "name": "check_funding_gaps",
+          "output_data": {"text": "I have funding for Ada and Tidio but need Intercom, Zendesk, and Freshworks funding data."},
+          "latency_ms": 220,
+          "tokens_input": 680,
+          "tokens_output": 35,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "Intercom Zendesk Freshworks latest funding valuation 2024"},
+          "output_data": {"results": ["Intercom: Series D $125M at $1.275B (2020), profitable since 2022. Zendesk: taken private by Hellman & Friedman for $10.2B (2022). Freshworks: IPO 2021, market cap ~$5.5B."]},
+          "latency_ms": 780,
+          "tokens_input": 55,
+          "tokens_output": 220,
+          "cost_usd": 0.004
+        },
+        {
+          "event_type": "reasoning",
+          "name": "final_synthesis",
+          "output_data": {"text": "I now have all the data needed: 5 competitors with pricing, differentiators, and funding. Let me compile the final analysis."},
+          "latency_ms": 950,
+          "tokens_input": 1200,
+          "tokens_output": 580,
+          "cost_usd": 0.012
+        }
+      ],
+      "trace_b": [
+        {
+          "event_type": "reasoning",
+          "name": "create_research_plan",
+          "output_data": {"text": "I'll create a structured research plan first:\n1. Identify top 5 AI support SaaS tools\n2. Batch-search pricing for all 5\n3. Batch-search funding/valuation for all 5\n4. Compile competitive matrix\nThis approach minimizes round-trips by batching related queries."},
+          "latency_ms": 480,
+          "tokens_input": 180,
+          "tokens_output": 120,
+          "cost_usd": 0.005
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "top 5 AI-powered customer support SaaS platforms 2024 comparison"},
+          "output_data": {"results": ["Intercom Fin", "Zendesk AI", "Freshdesk Freddy", "Ada", "Tidio Lyro"]},
+          "latency_ms": 820,
+          "tokens_input": 65,
+          "tokens_output": 300,
+          "cost_usd": 0.004
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "Intercom vs Zendesk vs Freshdesk vs Ada vs Tidio pricing comparison 2024"},
+          "output_data": {"results": ["Comprehensive pricing comparison: Intercom $39-139/seat, Zendesk $55-115/agent, Freshdesk $15-79/agent, Ada enterprise custom, Tidio free-$499/mo."]},
+          "latency_ms": 900,
+          "tokens_input": 70,
+          "tokens_output": 350,
+          "cost_usd": 0.005
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "AI customer support startups funding rounds valuation 2024 Intercom Zendesk Ada Tidio Freshworks"},
+          "output_data": {"results": ["Intercom $1.275B Series D. Zendesk $10.2B take-private. Freshworks $5.5B IPO. Ada $130M Series C. Tidio $25M Series B."]},
+          "latency_ms": 870,
+          "tokens_input": 75,
+          "tokens_output": 280,
+          "cost_usd": 0.005
+        },
+        {
+          "event_type": "reasoning",
+          "name": "compile_analysis",
+          "output_data": {"text": "All data collected in 3 searches. Compiling the competitive landscape analysis with differentiators, pricing tiers, and funding information."},
+          "latency_ms": 1100,
+          "tokens_input": 900,
+          "tokens_output": 550,
+          "cost_usd": 0.011
+        }
+      ]
+    },
+    {
+      "label": "market-sizing-edtech",
+      "input": "Research the global edtech market: current size, projected CAGR through 2030, key segments (K-12, higher ed, corporate training), and the top 3 emerging trends driving growth.",
+      "trace_a": [
+        {
+          "event_type": "reasoning",
+          "name": "initial_thought",
+          "output_data": {"text": "I need to find edtech market data. Let me start with the overall market size and growth projections."},
+          "latency_ms": 290,
+          "tokens_input": 160,
+          "tokens_output": 40,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "global edtech market size 2024 CAGR 2030 forecast"},
+          "output_data": {"results": ["Global edtech market valued at $340B in 2024, projected CAGR 16.5% to reach $890B by 2030."]},
+          "latency_ms": 750,
+          "tokens_input": 55,
+          "tokens_output": 240,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "reasoning",
+          "name": "assess_progress",
+          "output_data": {"text": "Good baseline numbers. Now I need the segment breakdown."},
+          "latency_ms": 200,
+          "tokens_input": 350,
+          "tokens_output": 30,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "edtech market segments K-12 higher education corporate training market share 2024"},
+          "output_data": {"results": ["K-12: 38% share ($129B), Higher Ed: 32% ($109B), Corporate Training: 22% ($75B), Other: 8% ($27B)."]},
+          "latency_ms": 700,
+          "tokens_input": 55,
+          "tokens_output": 200,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "reasoning",
+          "name": "identify_gap",
+          "output_data": {"text": "Have market size and segments. Still need the emerging trends."},
+          "latency_ms": 210,
+          "tokens_input": 480,
+          "tokens_output": 28,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "edtech emerging trends 2024 2025 AI personalized learning"},
+          "output_data": {"results": ["Top trends: (1) AI-powered personalized learning paths, (2) Micro-credentialing and skills-based hiring, (3) Immersive learning with AR/VR."]},
+          "latency_ms": 680,
+          "tokens_input": 50,
+          "tokens_output": 260,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "reasoning",
+          "name": "final_synthesis",
+          "output_data": {"text": "All data collected across three searches. Synthesizing the complete market analysis with size, CAGR, segment breakdown, and trend analysis."},
+          "latency_ms": 880,
+          "tokens_input": 950,
+          "tokens_output": 480,
+          "cost_usd": 0.010
+        }
+      ],
+      "trace_b": [
+        {
+          "event_type": "reasoning",
+          "name": "create_research_plan",
+          "output_data": {"text": "Research plan for edtech market analysis:\n1. Get overall market size + CAGR in one comprehensive query\n2. Get segment data + trends in a second query\n3. Synthesize findings into structured report"},
+          "latency_ms": 410,
+          "tokens_input": 160,
+          "tokens_output": 90,
+          "cost_usd": 0.004
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "global edtech market size 2024 2030 CAGR forecast K-12 higher ed corporate training segments"},
+          "output_data": {"results": ["Market $340B in 2024, CAGR 16.5% to $890B by 2030. K-12 38%, Higher Ed 32%, Corporate 22%, Other 8%."]},
+          "latency_ms": 880,
+          "tokens_input": 70,
+          "tokens_output": 320,
+          "cost_usd": 0.005
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "edtech industry top emerging trends 2024 2025 growth drivers AI personalization micro-credentials VR"},
+          "output_data": {"results": ["Three key trends: AI-powered adaptive learning (60% of new platforms), micro-credentialing replacing traditional degrees, immersive AR/VR classrooms."]},
+          "latency_ms": 810,
+          "tokens_input": 65,
+          "tokens_output": 280,
+          "cost_usd": 0.004
+        },
+        {
+          "event_type": "reasoning",
+          "name": "compile_analysis",
+          "output_data": {"text": "All data captured in two efficient searches. Compiling structured analysis covering market size, CAGR, segment breakdown, and three emerging trends."},
+          "latency_ms": 980,
+          "tokens_input": 780,
+          "tokens_output": 460,
+          "cost_usd": 0.009
+        }
+      ]
+    },
+    {
+      "label": "due-diligence-fintech",
+      "input": "Conduct preliminary due diligence on the buy-now-pay-later (BNPL) sector: regulatory landscape, default rates, major players and their market positions, and risks for investors.",
+      "trace_a": [
+        {
+          "event_type": "reasoning",
+          "name": "initial_thought",
+          "output_data": {"text": "BNPL due diligence requires multiple angles: regulation, financial metrics, competitive landscape, and risk factors. I'll research each sequentially."},
+          "latency_ms": 350,
+          "tokens_input": 175,
+          "tokens_output": 50,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "buy now pay later BNPL regulation 2024 CFPB rules"},
+          "output_data": {"results": ["CFPB classified BNPL as credit card equivalent (2024). New rules require dispute rights, refund protections, billing disclosures. EU considering similar framework."]},
+          "latency_ms": 780,
+          "tokens_input": 55,
+          "tokens_output": 250,
+          "cost_usd": 0.004
+        },
+        {
+          "event_type": "reasoning",
+          "name": "reflect_regulation",
+          "output_data": {"text": "Good regulatory context. Now I need default rate data and financial health metrics."},
+          "latency_ms": 230,
+          "tokens_input": 380,
+          "tokens_output": 35,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "BNPL default rates 2024 Affirm Klarna Afterpay delinquency"},
+          "output_data": {"results": ["Industry average default rate 3.7%. Affirm: 2.5% net charge-off. Klarna: 1.8% credit losses. Afterpay: 1.1%. Late fees represent 8-15% of revenue for most players."]},
+          "latency_ms": 740,
+          "tokens_input": 55,
+          "tokens_output": 220,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "BNPL market leaders market share Klarna Affirm Afterpay 2024"},
+          "output_data": {"results": ["Klarna: 34% global BNPL market, 150M users. Affirm: 18% US market, $16.7B GMV. Afterpay (Block/Square): 16M active users. PayPal Pay Later: fastest growing, leveraging existing 430M user base."]},
+          "latency_ms": 760,
+          "tokens_input": 55,
+          "tokens_output": 240,
+          "cost_usd": 0.004
+        },
+        {
+          "event_type": "reasoning",
+          "name": "assess_remaining",
+          "output_data": {"text": "Have regulatory, financial, and competitive data. Still need investor risk factors."},
+          "latency_ms": 220,
+          "tokens_input": 600,
+          "tokens_output": 30,
+          "cost_usd": 0.002
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "BNPL investment risks 2024 recession credit cycle regulatory"},
+          "output_data": {"results": ["Key risks: rising interest rates increasing funding costs, regulatory compliance costs, credit cycle exposure, merchant fee compression from competition, path to profitability questions."]},
+          "latency_ms": 720,
+          "tokens_input": 50,
+          "tokens_output": 230,
+          "cost_usd": 0.003
+        },
+        {
+          "event_type": "reasoning",
+          "name": "final_synthesis",
+          "output_data": {"text": "Complete data set assembled. Compiling the due diligence brief covering regulatory landscape, default metrics, competitive positioning, and investment risk factors."},
+          "latency_ms": 1050,
+          "tokens_input": 1350,
+          "tokens_output": 620,
+          "cost_usd": 0.014
+        }
+      ],
+      "trace_b": [
+        {
+          "event_type": "reasoning",
+          "name": "create_research_plan",
+          "output_data": {"text": "Due diligence research plan for BNPL sector:\n1. Comprehensive regulatory + market landscape query\n2. Financial metrics (defaults, revenue) + competitive positioning\n3. Risk assessment compilation\nTwo search rounds should cover all four dimensions."},
+          "latency_ms": 520,
+          "tokens_input": 175,
+          "tokens_output": 110,
+          "cost_usd": 0.005
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "BNPL buy now pay later regulatory landscape CFPB 2024 Klarna Affirm Afterpay market share competitive analysis"},
+          "output_data": {"results": ["CFPB credit card rules effective 2024. Klarna 34% market, Affirm 18% US, Afterpay 16M users, PayPal Pay Later growing fast."]},
+          "latency_ms": 920,
+          "tokens_input": 75,
+          "tokens_output": 380,
+          "cost_usd": 0.006
+        },
+        {
+          "event_type": "tool_call",
+          "name": "web_search",
+          "input_data": {"query": "BNPL default rates delinquency 2024 investor risks credit cycle interest rates profitability"},
+          "output_data": {"results": ["Industry default 3.7%, Affirm 2.5%, Klarna 1.8%, Afterpay 1.1%. Key risks: funding costs, regulatory compliance, credit cycles, merchant fee pressure."]},
+          "latency_ms": 860,
+          "tokens_input": 70,
+          "tokens_output": 350,
+          "cost_usd": 0.005
+        },
+        {
+          "event_type": "reasoning",
+          "name": "compile_analysis",
+          "output_data": {"text": "All four due diligence dimensions covered in two searches. Compiling preliminary brief with regulatory context, default rate analysis, competitive landscape, and risk factors for investors."},
+          "latency_ms": 1150,
+          "tokens_input": 950,
+          "tokens_output": 600,
+          "cost_usd": 0.012
+        }
+      ]
+    }
+  ]
+}

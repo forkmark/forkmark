@@ -1,0 +1,66 @@
+site_name: Forkmark Documentation
+site_description: The eval-first A/B comparison platform for LLM workflows
+site_url: https://docs.forkmark.dev
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: deep purple
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: deep purple
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+    - search.suggest
+    - search.highlight
+
+repo_url: https://github.com/forkmark/forkmark
+repo_name: forkmark/forkmark
+
+nav:
+  - Home: index.md
+  - Why Forkmark: why.md
+  - Getting Started:
+    - Quickstart: getting-started/quickstart.md
+    - Installation: getting-started/installation.md
+    - Configuration: getting-started/configuration.md
+  - Architecture: architecture.md
+  - SDK Guide:
+    - Overview: sdk/overview.md
+    - Workflow Runs: sdk/workflow-runs.md
+    - Eval Runs: sdk/eval-runs.md
+    - Integrations: sdk/integrations.md
+  - API Reference:
+    - Endpoints: api/endpoints.md
+    - Authentication: api/authentication.md
+    - Export Formats: api/exports.md
+  - Deployment:
+    - Self-Hosted: deployment/self-hosted.md
+    - Multi-Tenancy: deployment/multi-tenancy.md
+    - Production Checklist: deployment/production-checklist.md
+  - Evaluators:
+    - Built-in Evaluators: evaluators/built-in.md
+    - Custom Evaluators: evaluators/custom.md
+    - Pairwise Evaluation: evaluators/pairwise.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - def_list
+  - tables

@@ -1,0 +1,56 @@
+# ── Python ──────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+*.egg
+# Python build outputs (anchored to root + sdk so the SERVED frontend/dist is NOT ignored)
+/dist/
+/build/
+/sdk/dist/
+/sdk/build/
+
+# ── Virtual environments ────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+
+# ── Node / Frontend ─────────────────────────────────────────────────────────
+node_modules/
+frontend/node_modules/
+# NOTE: frontend/dist/ is intentionally committed — it is the pre-built SPA the
+# backend serves so `python run.py` works clone-and-go with no Node build step.
+# Stale multi-version build dirs stay ignored:
+frontend/dist_v*/
+
+# ── IDE / OS artifacts ──────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Testing ─────────────────────────────────────────────────────────────────
+.pytest_cache/
+pytest-cache-files-*/
+htmlcov/
+.coverage
+coverage.xml
+
+# ── Release artifacts ───────────────────────────────────────────────────────
+*.zip
+*.tar.gz
+
+# ── Database (local dev) ────────────────────────────────────────────────────
+*.db
+*.sqlite3
+
+# ── Logs ────────────────────────────────────────────────────────────────────
+*.log
+
+# ── Environment variables ───────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
