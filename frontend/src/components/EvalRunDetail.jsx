@@ -40,6 +40,10 @@ const S = {
   histLegend:{ display:'flex', gap:16, marginTop:8, fontSize:11, color:'var(--muted)' },
   toolbar: { display:'flex', gap:10, alignItems:'center', marginBottom:12, flexWrap:'wrap' },
   searchBox:{ background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:5, color:'var(--text)', padding:'5px 10px', fontSize:12, fontFamily:'var(--font)', minWidth:180 },
+  threshGroup:{ display:'flex', alignItems:'center', gap:8, padding:'4px 10px', background:'var(--surface2)', border:'1px solid var(--border)', borderRadius:5 },
+  threshLabel:{ fontSize:11, color:'var(--muted)', whiteSpace:'nowrap' },
+  threshVal:{ fontSize:12, fontWeight:700, color:'var(--accent)', minWidth:34, textAlign:'right' },
+  threshNote:{ fontSize:12, color:'var(--muted)', marginBottom:12 },
   reviewNext:{ fontSize:12, padding:'6px 14px', background:'var(--accent)', color:'var(--bg)', border:'none', borderRadius:5, fontWeight:700, cursor:'pointer', marginLeft:'auto' },
   exportBtn: { fontSize:12, padding:'6px 14px', background:'transparent', color:'var(--green)', border:'1px solid var(--green)', borderRadius:5, cursor:'pointer', fontWeight:600 },
   dpoBtn: { fontSize:12, padding:'6px 14px', background:'linear-gradient(135deg, var(--purple) 0%, var(--accent) 100%)', color:'#fff', border:'none', borderRadius:5, cursor:'pointer', fontWeight:700, letterSpacing:'0.3px' },
@@ -64,6 +68,7 @@ export default function EvalRunDetail({ evalRunId, nav }) {
   const [er,      setEr]      = useState(null)
   const [filter,  setFilter]  = useState('all')
   const [search,  setSearch]  = useState('')
+  const [minDiv,  setMinDiv]  = useState(0)   // review-threshold (0–1); 0 = show all
   const [loading, setLoading] = useState(true)
   const [showExportMenu, setShowExportMenu] = useState(false)
 
@@ -101,11 +106,15 @@ export default function EvalRunDetail({ evalRunId, nav }) {
   const filtered = comps.filter(c => {
     if (filter === 'undecided' && c.decided) return false
     if (filter === 'high' && (c.divergence_score || 0) < 0.5) return false
+    if (minDiv > 0 && (c.divergence_score || 0) < minDiv) return false
     if (search && !((c.test_case_label || '').toLowerCase().includes(searchLower))) return false
     return true
   })
 
-  const nextUndecided = comps.find(c => !c.decided)
+  // Cases at/above the review threshold that still need a verdict.
+  const needsReview = comps.filter(c => !c.decided && (c.divergence_score || 0) >= minDiv)
+  const aboveThresh = comps.filter(c => (c.divergence_score || 0) >= minDiv).length
+  const nextUndecided = needsReview[0]
   const totalStr  = er.total_cases || stats.total || '?'
   const compCount = stats.total    || 0
   const decided   = stats.decided  || 0
@@ -230,6 +239,15 @@ export default function EvalRunDetail({ evalRunId, nav }) {
         ))}
         <input style={S.searchBox} value={search} onChange={e => setSearch(e.target.value)} placeholder="Search test cases…" />
 
+        <div style={S.threshGroup}
+             title="Only require verdicts on cases that diverge at least this much. Lower-divergence cases are unlikely to need review.">
+          <span style={S.threshLabel}>Min Δ to review</span>
+          <input type="range" min="0" max="100" step="5" value={Math.round(minDiv * 100)}
+                 onChange={e => setMinDiv(parseInt(e.target.value) / 100)} style={{ width: 90 }}
+                 aria-label="Minimum divergence to review" />
+          <span style={S.threshVal}>{Math.round(minDiv * 100)}%</span>
+        </div>
+
         {/* DPO Export — core differentiator, always visible */}
         <button style={S.dpoBtn} title="Export as DPO training data (prompt/chosen/rejected)" onClick={() => {
           const url = api.exportDpo(null, er.id)
@@ -266,6 +284,17 @@ export default function EvalRunDetail({ evalRunId, nav }) {
           <button style={S.reviewNext} onClick={() => openComparison(nextUndecided.id)}>Review Next →</button>
         )}
       </div>
+
+      {minDiv > 0 && (
+        <div style={S.threshNote}>
+          {aboveThresh} case{aboveThresh === 1 ? '' : 's'} at ≥{Math.round(minDiv * 100)}% divergence
+          {needsReview.length > 0
+            ? <> · <strong>{needsReview.length}</strong> still need a verdict.</>
+            : <> · all reviewed ✓</>}
+          {' '}Lower-divergence cases are hidden — they&rsquo;re unlikely to need your input, and DPO export already
+          supports a matching <code>min_divergence</code> filter.
+        </div>
+      )}
 
       <div style={S.panel}>
         {filtered.length === 0

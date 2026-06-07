@@ -209,7 +209,7 @@ export default function Sidebar({ active, nav, enterpriseMode = false, agentEnab
         {collapsed ? '▸' : '◂ Collapse'}
       </button>
       <div style={S.footer(collapsed)}>
-        {collapsed ? 'v0.1.1' : <>v0.1.1 · <span style={{ color: enterpriseMode ? 'var(--purple)' : 'var(--green)' }}>{enterpriseMode ? 'Enterprise' : 'Community'}</span></>}
+        {collapsed ? 'v0.1.2' : <>v0.1.2 · <span style={{ color: enterpriseMode ? 'var(--purple)' : 'var(--green)' }}>{enterpriseMode ? 'Enterprise' : 'Community'}</span></>}
       </div>
     </nav>
   )

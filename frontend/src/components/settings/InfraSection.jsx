@@ -132,7 +132,7 @@ export default function InfraSection({
         <p style={S.cardSub}>
           {enterprise.multi_tenant
             ? 'Enterprise and infrastructure features. Configured via environment variables or Kubernetes ConfigMap.'
-            : 'You are running the open-source Community Edition. Enterprise features like multi-tenancy, SCIM provisioning, and OpenTelemetry are available with FM_ENTERPRISE_MODE=true.'}
+            : 'You are running the open-source Community Edition — the full comparison, human-review, and DPO-export workflow. Team and security features (multi-tenancy, SSO/SCIM, audit-log retention) are part of the upcoming Forkmark Enterprise edition and are not included in this build.'}
         </p>
 
         {[
@@ -149,8 +149,9 @@ export default function InfraSection({
         ))}
 
         <p style={{ ...S.hint, marginTop:12 }}>
-          To change these settings, update the corresponding <code>FM_*</code> environment variables
-          and restart the server. See the deployment documentation for details.
+          UI authentication is controlled by the <code>FM_REQUIRE_UI_AUTH</code> environment variable
+          (it&rsquo;s required automatically when the server is not bound to localhost). The remaining
+          rows reflect Enterprise capabilities, which are not bundled with the Community Edition.
         </p>
       </div>
     </>

@@ -52,6 +52,11 @@ class PlaygroundRequest(BaseModel):
     system_prompt: Optional[str] = None
     temperature: float = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: int = Field(default=1024, ge=1, le=16384)
+    # Optional per-model overrides (fall back to temperature/max_tokens above)
+    temperature_a: Optional[float] = Field(default=None, ge=0.0, le=2.0)
+    temperature_b: Optional[float] = Field(default=None, ge=0.0, le=2.0)
+    max_tokens_a: Optional[int] = Field(default=None, ge=1, le=16384)
+    max_tokens_b: Optional[int] = Field(default=None, ge=1, le=16384)
     workflow_id: Optional[str] = None
     provider_id_a: Optional[str] = None
     provider_id_b: Optional[str] = None
@@ -215,9 +220,16 @@ async def playground_run(body: PlaygroundRequest, background: BackgroundTasks,
         messages.append({"role": "system", "content": body.system_prompt})
     messages.append({"role": "user", "content": body.prompt})
 
+    # Per-model temperature / max_tokens (fall back to the shared values)
+    temp_a = body.temperature_a if body.temperature_a is not None else body.temperature
+    temp_b = body.temperature_b if body.temperature_b is not None else body.temperature
+    max_a = body.max_tokens_a if body.max_tokens_a is not None else body.max_tokens
+    max_b = body.max_tokens_b if body.max_tokens_b is not None else body.max_tokens
+
     wf = db.upsert_workflow("Playground", description="Interactive prompt playground")
 
-    async def _call_model(model: str, m_key: str, m_url: str):
+    async def _call_model(model: str, m_key: str, m_url: str,
+                          temperature: float, max_tokens: int):
         t0 = time.time()
         url = (m_url.rstrip("/") if m_url else "https://api.openai.com/v1") + "/chat/completions"
         async with httpx.AsyncClient(timeout=60.0) as client:
@@ -225,7 +237,7 @@ async def playground_run(body: PlaygroundRequest, background: BackgroundTasks,
                 url,
                 headers={"Authorization": f"Bearer {m_key}", "Content-Type": "application/json"},
                 json={"model": model, "messages": messages,
-                      "temperature": body.temperature, "max_tokens": body.max_tokens},
+                      "temperature": temperature, "max_tokens": max_tokens},
             )
             resp.raise_for_status()
             data = resp.json()
@@ -244,8 +256,8 @@ async def playground_run(body: PlaygroundRequest, background: BackgroundTasks,
     try:
         import asyncio
         result_a, result_b = await asyncio.gather(
-            _call_model(body.model_a, key_a, url_a),
-            _call_model(body.model_b, key_b, url_b),
+            _call_model(body.model_a, key_a, url_a, temp_a, max_a),
+            _call_model(body.model_b, key_b, url_b, temp_b, max_b),
         )
     except httpx.HTTPStatusError as e:
         raise HTTPException(502, f"Model API error: {e.response.status_code} — {e.response.text[:200]}")
@@ -257,17 +269,17 @@ async def playground_run(body: PlaygroundRequest, background: BackgroundTasks,
         input_data={"prompt": body.prompt, "system_prompt": body.system_prompt},
         metadata={"source": "playground"},
     )
-    branch_a = db.create_branch(run_id=run.id, workflow_id=wf.id, name="Branch A", model_id=body.model_a, temperature=body.temperature)
-    branch_b = db.create_branch(run_id=run.id, workflow_id=wf.id, name="Branch B", model_id=body.model_b, temperature=body.temperature)
+    branch_a = db.create_branch(run_id=run.id, workflow_id=wf.id, name="Branch A", model_id=body.model_a, temperature=temp_a)
+    branch_b = db.create_branch(run_id=run.id, workflow_id=wf.id, name="Branch B", model_id=body.model_b, temperature=temp_b)
 
     db.save_step_output(run_id=run.id, branch_id=branch_a.id, step_name="answer", step_index=0,
                         input_messages=messages, output_text=result_a["output_text"],
-                        model_id=body.model_a, temperature=body.temperature,
+                        model_id=body.model_a, temperature=temp_a,
                         tokens_input=result_a["tokens_input"], tokens_output=result_a["tokens_output"],
                         latency_ms=result_a["latency_ms"])
     db.save_step_output(run_id=run.id, branch_id=branch_b.id, step_name="answer", step_index=0,
                         input_messages=messages, output_text=result_b["output_text"],
-                        model_id=body.model_b, temperature=body.temperature,
+                        model_id=body.model_b, temperature=temp_b,
                         tokens_input=result_b["tokens_input"], tokens_output=result_b["tokens_output"],
                         latency_ms=result_b["latency_ms"])
 

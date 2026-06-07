@@ -72,11 +72,12 @@ function ProviderForm({ provider, onSave, onCancel }) {
   const [saving, setSaving] = useState(false)
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState(null)
+  const [nameError, setNameError] = useState(false)
 
   const isEdit = !!provider
 
   async function handleSave() {
-    if (!name.trim()) return
+    if (!name.trim()) { setNameError(true); return }
     setSaving(true)
     try {
       if (isEdit) {
@@ -124,9 +125,13 @@ function ProviderForm({ provider, onSave, onCancel }) {
 
       <div style={PS.formGrid}>
         <div style={PS.formRow}>
-          <label style={S.label}>Name</label>
-          <input style={S.input} placeholder='e.g. "OpenAI Production"'
-            value={name} onChange={e => setName(e.target.value)} autoFocus />
+          <label style={S.label}>Name <span style={{ color: 'var(--red)' }}>*</span></label>
+          <input style={{ ...S.input, borderColor: nameError ? 'var(--red)' : undefined }}
+            placeholder='e.g. "OpenAI Production"'
+            value={name}
+            onChange={e => { setName(e.target.value); if (nameError) setNameError(false) }}
+            aria-invalid={nameError} autoFocus />
+          {nameError && <p style={{ ...S.hint, color: 'var(--red)' }}>Name is required.</p>}
         </div>
         <div style={PS.formRow}>
           <label style={S.label}>Type</label>
@@ -172,7 +177,7 @@ function ProviderForm({ provider, onSave, onCancel }) {
       </div>
 
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <button style={S.btn(true, saving)} disabled={saving || !name.trim()} onClick={handleSave}>
+        <button style={S.btn(true, saving)} disabled={saving} onClick={handleSave}>
           {saving ? 'Saving…' : isEdit ? 'Update Provider' : 'Add Provider'}
         </button>
         {isEdit && (
@@ -255,8 +260,10 @@ export default function ProviderSection() {
       <div style={S.card}>
         <h2 style={S.cardH}>Provider Registry</h2>
         <p style={S.cardSub}>
-          Add your LLM providers here. Each branch in a comparison can use a different provider —
-          useful for comparing OpenAI vs. Anthropic, or production vs. staging keys.
+          <strong>Where your models run.</strong> Add a provider for each LLM endpoint (OpenAI, Anthropic,
+          Ollama, …). Each comparison branch can use a different provider — handy for OpenAI vs. Anthropic or
+          production vs. staging keys. The judge model and divergence-scoring settings live below in
+          <em> LLM Configuration</em>.
         </p>
 
         {/* Provider list */}

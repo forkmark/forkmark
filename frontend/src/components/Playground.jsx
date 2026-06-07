@@ -45,8 +45,12 @@ export default function Playground({ nav }) {
   const [systemPrompt, setSys]    = useState('')
   const [modelA, setModelA]       = useState('gpt-4o-mini')
   const [modelB, setModelB]       = useState('gpt-4o')
-  const [temp, setTemp]           = useState(0.7)
-  const [maxTokens, setMaxTok]    = useState(1024)
+  const [customA, setCustomA]     = useState('')
+  const [customB, setCustomB]     = useState('')
+  const [tempA, setTempA]         = useState(0.7)
+  const [tempB, setTempB]         = useState(0.7)
+  const [maxA, setMaxA]           = useState(1024)
+  const [maxB, setMaxB]           = useState(1024)
   const [loading, setLoading]     = useState(false)
   const [result, setResult]       = useState(null)
   const [providers, setProviders] = useState([])
@@ -59,6 +63,10 @@ export default function Playground({ nav }) {
   })
 
   const showProviders = providers.length > 1
+  const effModelA = modelA === '__custom__' ? customA.trim() : modelA
+  const effModelB = modelB === '__custom__' ? customB.trim() : modelB
+  const customMissing = (modelA === '__custom__' && !customA.trim()) ||
+                        (modelB === '__custom__' && !customB.trim())
 
   async function run() {
     if (!prompt.trim()) return
@@ -67,11 +75,13 @@ export default function Playground({ nav }) {
     try {
       const data = await api.playgroundRun({
         prompt: prompt.trim(),
-        model_a: modelA,
-        model_b: modelB,
+        model_a: effModelA,
+        model_b: effModelB,
         system_prompt: systemPrompt.trim() || null,
-        temperature: temp,
-        max_tokens: maxTokens,
+        temperature_a: tempA,
+        temperature_b: tempB,
+        max_tokens_a: maxA,
+        max_tokens_b: maxB,
         ...(provA ? { provider_id_a: provA } : {}),
         ...(provB ? { provider_id_b: provB } : {}),
       })
@@ -99,57 +109,55 @@ export default function Playground({ nav }) {
           <textarea id="pg-system" style={S.sysArea} value={systemPrompt} onChange={e => setSys(e.target.value)}
                     placeholder="You are a helpful assistant..." />
         </div>
-        <div>
-          <label htmlFor="pg-model-a" style={F.label}>Model A</label>
-          <select id="pg-model-a" style={F.select} value={modelA} onChange={e => setModelA(e.target.value)}>
-            {MODELS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          {showProviders && (
-            <div style={{ marginTop: 6 }}>
-              <label style={{ fontSize: 10, color: 'var(--muted)', display: 'block', marginBottom: 3 }}>Provider</label>
-              <select style={F.select} value={provA} onChange={e => setProvA(e.target.value)}>
-                <option value="">Default{providers.find(p => p.is_default) ? ` (${providers.find(p => p.is_default).name})` : ''}</option>
-                {providers.filter(p => !p.is_default).map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+        {[
+          { side: 'A', model: modelA, setModel: setModelA, custom: customA, setCustom: setCustomA,
+            prov: provA, setProv: setProvA, temp: tempA, setTemp: setTempA, max: maxA, setMax: setMaxA },
+          { side: 'B', model: modelB, setModel: setModelB, custom: customB, setCustom: setCustomB,
+            prov: provB, setProv: setProvB, temp: tempB, setTemp: setTempB, max: maxB, setMax: setMaxB },
+        ].map(col => (
+          <div key={col.side}>
+            <label htmlFor={`pg-model-${col.side}`} style={F.label}>Model {col.side}</label>
+            <select id={`pg-model-${col.side}`} style={F.select} value={col.model}
+                    onChange={e => col.setModel(e.target.value)}>
+              {MODELS.map(m => <option key={m} value={m}>{m}</option>)}
+              <option value="__custom__">Custom model ID…</option>
+            </select>
+            {col.model === '__custom__' && (
+              <input style={{ ...F.select, marginTop: 6 }}
+                     placeholder="e.g. openai/gpt-4o, llama3, claude-3-5-sonnet"
+                     value={col.custom} onChange={e => col.setCustom(e.target.value)} />
+            )}
+            {showProviders && (
+              <div style={{ marginTop: 6 }}>
+                <label style={{ fontSize: 10, color: 'var(--muted)', display: 'block', marginBottom: 3 }}>Provider</label>
+                <select style={F.select} value={col.prov} onChange={e => col.setProv(e.target.value)}>
+                  <option value="">Default{providers.find(p => p.is_default) ? ` (${providers.find(p => p.is_default).name})` : ''}</option>
+                  {providers.filter(p => !p.is_default).map(p => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div style={{ marginTop: 10 }}>
+              <label style={F.label}>Temperature: {col.temp.toFixed(1)}</label>
+              <div style={S.rangeRow}>
+                <input style={{ flex:1 }} type="range" min="0" max="2" step="0.1"
+                       value={col.temp} onChange={e => col.setTemp(parseFloat(e.target.value))} />
+                <span style={S.rangeVal}>{col.temp.toFixed(1)}</span>
+              </div>
             </div>
-          )}
-        </div>
-        <div>
-          <label htmlFor="pg-model-b" style={F.label}>Model B</label>
-          <select id="pg-model-b" style={F.select} value={modelB} onChange={e => setModelB(e.target.value)}>
-            {MODELS.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-          {showProviders && (
-            <div style={{ marginTop: 6 }}>
-              <label style={{ fontSize: 10, color: 'var(--muted)', display: 'block', marginBottom: 3 }}>Provider</label>
-              <select style={F.select} value={provB} onChange={e => setProvB(e.target.value)}>
-                <option value="">Default{providers.find(p => p.is_default) ? ` (${providers.find(p => p.is_default).name})` : ''}</option>
-                {providers.filter(p => !p.is_default).map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
+            <div style={{ marginTop: 10 }}>
+              <label style={F.label}>Max Tokens</label>
+              <input style={S.numInput} type="number" value={col.max} min={1} max={16384}
+                     onChange={e => col.setMax(parseInt(e.target.value) || 1024)} />
             </div>
-          )}
-        </div>
-        <div>
-          <label htmlFor="pg-temp" style={F.label}>Temperature: {temp.toFixed(1)}</label>
-          <div style={S.rangeRow}>
-            <input id="pg-temp" style={{ flex:1 }} type="range" min="0" max="2" step="0.1"
-                   value={temp} onChange={e => setTemp(parseFloat(e.target.value))} />
-            <span style={S.rangeVal}>{temp.toFixed(1)}</span>
           </div>
-        </div>
-        <div>
-          <label htmlFor="pg-max-tokens" style={F.label}>Max Tokens</label>
-          <input id="pg-max-tokens" style={S.numInput} type="number" value={maxTokens} min={1} max={16384}
-                 onChange={e => setMaxTok(parseInt(e.target.value) || 1024)} />
-        </div>
+        ))}
       </div>
 
       <div style={S.runRow}>
-        <button style={S.runBtn(!prompt.trim() || loading)} disabled={!prompt.trim() || loading} onClick={run}>
+        <button style={S.runBtn(!prompt.trim() || loading || customMissing)}
+                disabled={!prompt.trim() || loading || customMissing} onClick={run}>
           {loading ? 'Running...' : 'Run Comparison'}
         </button>
         {result?.comparison_id && (

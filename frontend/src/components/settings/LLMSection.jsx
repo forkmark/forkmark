@@ -23,12 +23,13 @@ export default function LLMSection({
     <>
       <div style={S.section}>LLM Configuration</div>
 
-      {/* Provider Card */}
+      {/* Default API Key Card */}
       <div style={S.card}>
-        <h2 style={S.cardH}>LLM Provider</h2>
+        <h2 style={S.cardH}>Default API Key<InfoTip text="The fallback key used by the divergence scorer and by any comparison branch that doesn't specify its own provider. For multiple providers or per-branch keys, use the LLM Providers registry above — this key is auto-migrated into it." /></h2>
         <p style={S.cardSub}>
-          Used for the No-code Workflow Runner and automatic divergence scoring.
-          Compatible with OpenAI and any OpenAI-compatible provider (OpenRouter, Groq, Together, Ollama, etc.).
+          Fallback key used for automatic divergence scoring and for branches that don&rsquo;t select a
+          specific provider. For multiple providers or per-branch keys, use the <em>LLM Providers</em> registry
+          above. Compatible with OpenAI and any OpenAI-compatible provider (OpenRouter, Groq, Together, Ollama, etc.).
         </p>
 
         <div style={S.row}>

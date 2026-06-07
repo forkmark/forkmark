@@ -19,9 +19,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with no Langfuse account) and `examples/sample_dpo.jsonl` (the DPO export format).
 - **Project files** — `LICENSE` (MIT), `CONTRIBUTING.md`, GitHub issue templates,
   and a pull-request template.
+- **Playground: per-model temperature & max-tokens** — Model A and Model B can now
+  use different temperature and max-token settings (previously shared), and each
+  model picker has a "Custom model ID…" option for models outside the built-in list.
+- **Divergence-threshold review filter** — the eval-run review view has a "Min Δ to
+  review" slider; cases below the threshold are hidden and "Review Next" skips them,
+  so you only give verdicts on high-divergence cases. Pairs with the DPO export's
+  existing `min_divergence` filter.
+
+### Changed
+
+- **Settings clarity** — disambiguated "LLM Providers" (where models run) from the
+  legacy single key in "LLM Configuration" (renamed to "Default API Key"), which is
+  used for scoring and as a per-branch fallback.
+- **Truthful edition messaging** — the Platform Status card no longer advertises
+  enterprise features that aren't bundled in the OSS build; sidebar version string
+  corrected to v0.1.2.
 
 ### Fixed
 
+- **Provider form did nothing on "Add Provider"** — the submit button was silently
+  disabled when the (required) Name field was empty. Name now has a visible required
+  marker and inline validation instead of a dead button.
+- **Test isolation / CI** — agent tests mutated `FM_ENABLE_AGENT_COMPARISON` via
+  `os.environ` without cleanup, leaking into later tests and failing the suite in a
+  full single-process run (CI). Added an autouse fixture that restores `os.environ`
+  around every test, making the suite order-independent.
 - **Workflow Builder crash** — the "Run Comparison" view threw
   `r.toLowerCase is not a function` because the `Input`/`Textarea` components
   derived their DOM id from `label.toLowerCase()`, but several fields pass a JSX
