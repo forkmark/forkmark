@@ -1,0 +1,77 @@
+{
+  "data": [
+    {
+      "id": "obs-1a",
+      "traceId": "trace-1",
+      "type": "GENERATION",
+      "name": "summarise",
+      "startTime": "2026-06-01T10:00:00.000Z",
+      "input": {"messages": [{"role": "user", "content": "Summarize: The tenant shall pay rent on the first of each month; late payment incurs a 5% fee after a 5-day grace period."}]},
+      "output": {"role": "assistant", "content": "Rent is due on the 1st monthly. A 5% late fee applies if unpaid after a 5-day grace period."},
+      "model": "gpt-4o",
+      "modelParameters": {"temperature": 0.3},
+      "metadata": {"label": "lease-late-fee"}
+    },
+    {
+      "id": "obs-1b",
+      "traceId": "trace-2",
+      "type": "GENERATION",
+      "name": "summarise",
+      "startTime": "2026-06-01T10:00:05.000Z",
+      "input": {"messages": [{"role": "user", "content": "Summarize: The tenant shall pay rent on the first of each month; late payment incurs a 5% fee after a 5-day grace period."}]},
+      "output": {"role": "assistant", "content": "Tenant pays rent monthly. There is a fee for paying late."},
+      "model": "gpt-4o-mini",
+      "modelParameters": {"temperature": 0.3},
+      "metadata": {"label": "lease-late-fee"}
+    },
+    {
+      "id": "obs-2a",
+      "traceId": "trace-3",
+      "type": "GENERATION",
+      "name": "summarise",
+      "startTime": "2026-06-01T10:01:00.000Z",
+      "input": {"messages": [{"role": "user", "content": "Summarize: Either party may terminate this agreement with 30 days written notice; deposits are refunded within 14 days of move-out less documented damages."}]},
+      "output": {"role": "assistant", "content": "Either party can end the agreement with 30 days' written notice. Deposits are returned within 14 days of move-out, minus documented damages."},
+      "model": "gpt-4o",
+      "modelParameters": {"temperature": 0.3},
+      "metadata": {"label": "termination-deposit"}
+    },
+    {
+      "id": "obs-2b",
+      "traceId": "trace-4",
+      "type": "GENERATION",
+      "name": "summarise",
+      "startTime": "2026-06-01T10:01:05.000Z",
+      "input": {"messages": [{"role": "user", "content": "Summarize: Either party may terminate this agreement with 30 days written notice; deposits are refunded within 14 days of move-out less documented damages."}]},
+      "output": {"role": "assistant", "content": "You can cancel anytime with notice and get your deposit back."},
+      "model": "gpt-4o-mini",
+      "modelParameters": {"temperature": 0.3},
+      "metadata": {"label": "termination-deposit"}
+    },
+    {
+      "id": "obs-3a",
+      "traceId": "trace-5",
+      "type": "GENERATION",
+      "name": "summarise",
+      "startTime": "2026-06-01T10:02:00.000Z",
+      "input": {"messages": [{"role": "user", "content": "Summarize: The landlord must provide 24 hours notice before entering the unit except in emergencies."}]},
+      "output": {"role": "assistant", "content": "The landlord must give 24 hours' notice before entering, except in emergencies."},
+      "model": "gpt-4o",
+      "modelParameters": {"temperature": 0.3},
+      "metadata": {"label": "entry-notice"}
+    },
+    {
+      "id": "obs-3b",
+      "traceId": "trace-6",
+      "type": "GENERATION",
+      "name": "summarise",
+      "startTime": "2026-06-01T10:02:05.000Z",
+      "input": {"messages": [{"role": "user", "content": "Summarize: The landlord must provide 24 hours notice before entering the unit except in emergencies."}]},
+      "output": {"role": "assistant", "content": "Landlord needs to tell you before coming in."},
+      "model": "gpt-4o-mini",
+      "modelParameters": {"temperature": 0.3},
+      "metadata": {"label": "entry-notice"}
+    }
+  ],
+  "meta": {"page": 1, "limit": 50, "totalItems": 6, "totalPages": 1}
+}

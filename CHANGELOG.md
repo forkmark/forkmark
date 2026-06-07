@@ -5,6 +5,26 @@ All notable changes to Forkmark are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Langfuse importer** — `forkmark import langfuse` turns generations already
+  logged in Langfuse into Forkmark A/B comparisons by pairing the same input run
+  through two models. Reads from a Langfuse export file (`--file`) or live from
+  the Langfuse public API (`--from-api`, works with self-hosted Langfuse).
+  Models are auto-detected or set with `--model-a`/`--model-b`; `--dry-run`
+  previews without pushing. Available as the `forkmark` CLI and `python -m forkmark`.
+- **Sample datasets** — `examples/langfuse_sample_export.json` (try the importer
+  with no Langfuse account) and `examples/sample_dpo.jsonl` (the DPO export format).
+- **Project files** — `LICENSE` (MIT), `CONTRIBUTING.md`, GitHub issue templates,
+  and a pull-request template.
+
+### Fixed
+
+- `sdk/setup.py` declared the Apache license while the project is MIT; corrected
+  the license classifier to match.
+
 ## [0.1.2] - 2026-06-07
 
 First public open-source release. This version focuses on the LLM A/B comparison

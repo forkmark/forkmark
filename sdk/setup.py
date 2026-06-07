@@ -29,6 +29,11 @@ setup(
     packages=find_packages(),
     python_requires=">=3.9",
     install_requires=["httpx>=0.27.0"],
+    entry_points={
+        "console_scripts": [
+            "forkmark=forkmark.cli:main",
+        ],
+    },
     extras_require={
         "openai":    ["openai>=1.0.0"],
         "anthropic": ["anthropic>=0.28.0"],
@@ -44,7 +49,7 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
-        "License :: OSI Approved :: Apache Software License",
+        "License :: OSI Approved :: MIT License",
     ],
     keywords="llm eval comparison dpo preference ai workflow",
 )

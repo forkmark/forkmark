@@ -11,7 +11,7 @@ Compare two LLM branches side-by-side, collect human preference decisions, and e
 ## Quick Start
 
 ```bash
-git clone https://github.com/YOUR_ORG/forkmark.git
+git clone https://github.com/forkmark/forkmark.git
 cd forkmark
 pip install -r requirements.txt
 python run.py
@@ -62,11 +62,36 @@ Forkmark scores the divergence and creates the comparison automatically. Open th
 
 Want Forkmark to call both models for a whole test set? Use `forkmark.eval_run(...)` with `case.step()` / `case.branch_step()` — see the [SDK docs](docs/docs/sdk/overview.md).
 
+## Import from Langfuse
+
+Already logging to Langfuse? You don't need to re-instrument anything. Forkmark turns your logged generations into A/B comparisons by pairing the **same input run through two models** — then you review and export DPO data as usual.
+
+```bash
+pip install -e sdk          # installs the `forkmark` CLI
+
+# Try it on the bundled sample (no Langfuse needed):
+forkmark import langfuse --file examples/langfuse_sample_export.json --dry-run
+
+# From a Langfuse export file:
+forkmark import langfuse --file langfuse_export.json \
+  --model-a gpt-4o --model-b gpt-4o-mini \
+  --forkmark-url http://localhost:7700 --api-key fm_...
+
+# Or live from the Langfuse API (works with self-hosted Langfuse too):
+export LANGFUSE_HOST=https://cloud.langfuse.com
+export LANGFUSE_PUBLIC_KEY=pk-...   LANGFUSE_SECRET_KEY=sk-...
+forkmark import langfuse --from-api --from-time 2026-06-01T00:00:00Z \
+  --api-key fm_...
+```
+
+`--model-a` / `--model-b` are auto-detected from the data if omitted. Use `--dry-run` to preview how many comparisons would be created before pushing. (No code? `python -m forkmark import langfuse ...` works without installing.)
+
 ## Features
 
 **Evaluation**: divergence scoring (4 tiers), inline diffs, cost tracking, background auto-scoring.
 **Review**: keyboard-driven decisions (A/B/N shortcuts), confidence levels, tagging taxonomy, threaded comments.
-**Export**: DPO JSONL, OpenAI fine-tuning format, decisions JSONL, CSV --- all one-click from the UI.
+**Export**: DPO JSONL, OpenAI fine-tuning format, decisions JSONL, CSV --- all one-click from the UI. See [`examples/sample_dpo.jsonl`](examples/sample_dpo.jsonl) for the DPO output format.
+**Import**: pull existing logs from Langfuse and pair them into comparisons (`forkmark import langfuse`).
 **Demos**: 9 industry demo scenarios pre-loaded --- healthcare, legal, finance, retail, and more.
 **API**: Full REST API with OpenAPI docs at `/docs`. Python SDK included.
 
