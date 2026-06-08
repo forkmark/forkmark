@@ -111,6 +111,15 @@ cd forkmark
 alembic upgrade head
 ```
 
+## Backup & restore
+
+All your data — workflows, comparisons, decisions, and your preference/DPO corpus — lives in one place, so back it up regularly.
+
+- **SQLite (default):** copy the database file (default `~/.forkmark/forkmark.db`, or `/data/forkmark.db` in the Docker volume) while the server is stopped, or use `sqlite3 forkmark.db ".backup backup.db"` for a consistent online copy. Restore by putting the file back at `FM_DB_PATH`.
+- **PostgreSQL:** use `pg_dump forkmark > backup.sql` to back up and `psql forkmark < backup.sql` to restore.
+
+> **Warning:** `docker compose down -v` deletes the data volume and your database with it. Use plain `docker compose down` to stop containers without losing data.
+
 ## Bootstrapping the first admin API key
 
 On a networked deployment, Forkmark requires an API key for its UI endpoints by
