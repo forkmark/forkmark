@@ -1,6 +1,6 @@
 # Self-Hosted Deployment
 
-Forkmark is designed for self-hosting. This guide covers production deployment with PostgreSQL, Redis, and optional Celery workers.
+Forkmark is designed for self-hosting. This guide covers production deployment with PostgreSQL and optional Redis caching. Background scoring runs in-process (a thread pool sized by `FM_BACKGROUND_WORKERS`), so no separate worker service is needed.
 
 ## Architecture
 
@@ -11,16 +11,16 @@ Forkmark is designed for self-hosting. This guide covers production deployment w
                     └──────┬──────┘
                            │
                     ┌──────▼──────┐
-                    │   Forkmark │
-                    │   (FastAPI) │
-                    └──┬────┬──┬──┘
-                       │    │  │
-              ┌────────┘    │  └────────┐
-              ▼             ▼           ▼
-        ┌──────────┐ ┌──────────┐ ┌──────────┐
-        │PostgreSQL│ │  Redis   │ │  Celery   │
-        │          │ │          │ │ Workers   │
-        └──────────┘ └──────────┘ └──────────┘
+                    │   Forkmark  │
+                    │  (FastAPI)  │
+                    └──────┬──┬───┘
+                           │  │
+                  ┌────────┘  └────────┐
+                  ▼                    ▼
+            ┌──────────┐         ┌──────────┐
+            │PostgreSQL│         │  Redis    │
+            │          │         │ (optional)│
+            └──────────┘         └──────────┘
 ```
 
 ## Docker Compose (recommended)
@@ -57,20 +57,12 @@ services:
     volumes:
       - redisdata:/data
 
-  worker:
-    build: .
-    command: celery -A core.celery_app worker -l info --max-tasks-per-child=200
-    environment:
-      - FM_DATABASE_URL=postgresql://fp:fp@postgres:5432/forkmark
-      - FM_REDIS_URL=redis://redis:6379/0
-    depends_on:
-      - postgres
-      - redis
-
 volumes:
   pgdata:
   redisdata:
 ```
+
+Background scoring runs in-process via a thread pool (`FM_BACKGROUND_WORKERS`), so no separate worker service is required. Redis is optional and used only for caching.
 
 ## Environment setup
 
@@ -169,6 +161,6 @@ server {
 
 ## Scaling
 
-- **Horizontal API scaling**: Run multiple Forkmark instances behind a load balancer. State is in PostgreSQL and Redis, not in-process.
-- **Worker scaling**: Add Celery worker replicas for background scoring throughput.
+- **Horizontal API scaling**: Run multiple Forkmark instances behind a load balancer, all pointed at the same PostgreSQL database (set `FM_DATABASE_URL`).
+- **Scoring throughput**: Background divergence scoring runs in-process; raise `FM_BACKGROUND_WORKERS` (1–16) to increase concurrency per instance.
 - **Database scaling**: Use PgBouncer for connection pooling at scale. See [Production checklist](production-checklist.md).

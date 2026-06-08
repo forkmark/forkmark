@@ -48,7 +48,7 @@ def api(method, path, data=None, _retries=4, _backoff=1.0):
             return r.json()
         except httpx.ConnectError:
             print(f"\n[error] Cannot connect to {BASE_URL}")
-            print("  Make sure Forkmark is running (run run.bat first)\n")
+            print("  Make sure Forkmark is running (run `python run.py` first)\n")
             sys.exit(1)
         except Exception as e:
             print(f"[error] {method.upper()} {path}: {e}")

@@ -7,7 +7,7 @@ Get Forkmark running and instrument your first A/B comparison in under 5 minutes
 ```bash
 git clone https://github.com/forkmark/forkmark.git
 cd forkmark
-python start.py
+python run.py
 ```
 
 The launcher auto-detects Docker (recommended) or falls back to Python direct mode. Forkmark starts on `http://localhost:7700`.

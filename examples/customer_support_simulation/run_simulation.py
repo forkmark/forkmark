@@ -10,7 +10,7 @@ Runs a live A/B model comparison:
 Prerequisites
 -------------
 1. Forkmark running:
-       Windows : run.bat
+       Run     : python run.py
        Mac/Lin : docker compose -f docker-compose.simple.yml up --build -d
 
 2. An OpenRouter API key (https://openrouter.ai):
@@ -226,7 +226,7 @@ def main():
         print(f"  Forkmark: {health.get('status')} (v{health.get('version')})")
     except Exception:
         print("ERROR: Cannot reach Forkmark at", FM_URL)
-        print("  Make sure the platform is running (run.bat or docker compose up)")
+        print("  Make sure the platform is running (python run.py or docker compose up)")
         sys.exit(1)
 
     # ── API key (create one automatically for this run) ────────────────────

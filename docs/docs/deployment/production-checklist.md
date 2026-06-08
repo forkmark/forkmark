@@ -24,9 +24,8 @@ Use this checklist before deploying Forkmark to production.
 
 ## Caching and messaging
 
-- [ ] Set `FM_REDIS_URL` for stats caching, rate limiting, and message bus
-- [ ] Deploy Celery workers for background scoring: `celery -A core.celery_app worker`
-- [ ] Enable Celery beat for scheduled retry of failed scoring
+- [ ] (Optional) Set `FM_REDIS_URL` to enable Redis-backed caching
+- [ ] Tune `FM_BACKGROUND_WORKERS` for in-process background scoring throughput
 
 ## Observability
 

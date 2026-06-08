@@ -13,7 +13,7 @@ contributions — bug reports, docs fixes, and PRs — are very welcome.
 ## Development setup
 
 ```bash
-git clone https://github.com/YOUR_ORG/forkmark.git
+git clone https://github.com/forkmark/forkmark.git
 cd forkmark
 
 # Backend

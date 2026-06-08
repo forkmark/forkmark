@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
-from backend.deps import db, redis_client, require_key, async_enqueue_scoring
+from backend.deps import db, require_key, async_enqueue_scoring
 from core.models import RunStatus, EvalRunStatus
 
 
@@ -182,10 +182,6 @@ def sdk_create_comparison(body: ComparisonCreate, background_tasks: BackgroundTa
         test_case_label=run.test_case_label,
         scoring_status="pending",
     )
-    if redis_client:
-        from core.celery_app import run_scoring_task
-        run_scoring_task.delay(comp.id, body.branch_a_id, body.branch_b_id, body.evaluator_configs)
-    else:
-        background_tasks.add_task(async_enqueue_scoring, db, comp.id,
-                                  body.branch_a_id, body.branch_b_id, body.evaluator_configs)
+    background_tasks.add_task(async_enqueue_scoring, db, comp.id,
+                              body.branch_a_id, body.branch_b_id, body.evaluator_configs)
     return comp.to_dict()

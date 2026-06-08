@@ -18,7 +18,7 @@ Forkmark makes structured human evaluation the core primitive of your AI quality
 # Clone and start
 git clone https://github.com/forkmark/forkmark.git
 cd forkmark
-python start.py
+python run.py
 ```
 
 Then instrument your first workflow:

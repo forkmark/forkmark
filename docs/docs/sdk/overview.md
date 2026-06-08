@@ -79,5 +79,5 @@ See [Integrations](integrations.md) for details.
 
 ```python
 import forkmark
-print(forkmark.__version__)  # "0.1.0"
+print(forkmark.__version__)  # "0.1.2"
 ```

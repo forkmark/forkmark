@@ -1,5 +1,5 @@
 """Forkmark SDK — instrument your AI workflows in 3 lines."""
-__version__ = "0.1.0"
+__version__ = "0.1.2"
 
 from .client import ForkmarkClient
 from .workflow import WorkflowContext

@@ -32,5 +32,7 @@ psycopg2-binary>=2.9.9
 # pip install jsonschema
 # jsonschema>=4.20.0
 regex==2024.5.15
+
+# Redis is optional — used for caching when FM_REDIS_URL is set; the app runs
+# fine without it (falls back to in-memory caching).
 redis==5.0.4
-celery==5.4.0

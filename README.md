@@ -4,7 +4,7 @@
 
 Compare two LLM branches side-by-side, collect human preference decisions, and export training data for fine-tuning --- all without sending a single byte to the cloud.
 
-[![CI](https://github.com/YOUR_ORG/forkmark/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_ORG/forkmark/actions)
+[![CI](https://github.com/forkmark/forkmark/actions/workflows/ci.yml/badge.svg)](https://github.com/forkmark/forkmark/actions)
 
 ---
 

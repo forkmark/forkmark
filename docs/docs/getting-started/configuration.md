@@ -66,8 +66,7 @@ The `auto` mode tries `semantic` first and falls back to `lexical` if sentence-t
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `FM_BACKGROUND_WORKERS` | `4` | Number of background worker threads |
-| `FM_CELERY_BROKER_URL` | _(unset)_ | Celery broker URL (uses Redis URL if unset) |
+| `FM_BACKGROUND_WORKERS` | `4` | Number of in-process background worker threads (1–16) |
 
 ## CORS
 

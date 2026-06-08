@@ -7,7 +7,7 @@
 ```bash
 git clone https://github.com/forkmark/forkmark.git
 cd forkmark
-python start.py
+python run.py
 ```
 
 The launcher detects Docker and starts via `docker-compose.simple.yml`. First run builds the image (~2 minutes).
@@ -21,7 +21,7 @@ git clone https://github.com/forkmark/forkmark.git
 cd forkmark
 pip install -r requirements.txt
 cd frontend && npm install && npm run build && cd ..
-python start.py
+python run.py
 ```
 
 Requirements: Python 3.9+, Node.js 18+ (for frontend build).

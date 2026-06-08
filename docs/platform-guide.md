@@ -2,6 +2,8 @@
 
 > *From "What is this?" to "How does it work under the hood?" — a progressive deep-dive.*
 
+> **Note on scope:** This guide describes Forkmark's envisioned/target architecture, including components that are **not part of the current open-source build** — multi-tenancy, SCIM/SSO, Celery workers, Nginx, PgBouncer, and Kubernetes. The shipped OSS edition runs as a single FastAPI process with SQLite (default) or PostgreSQL, with in-process background scoring. Treat the enterprise/scaling sections below as a roadmap, not as features available today.
+
 ---
 
 ## Part 1 — The Big Picture (Non-Technical)
@@ -764,7 +766,7 @@ All configuration is via environment variables (or `~/.forkmark/.env`):
 
 ```bash
 cd forkmark/v0.1.2
-python start.py
+python run.py
 # → Starts on http://localhost:7700
 # → SQLite database at ~/.forkmark/forkmark.db
 ```

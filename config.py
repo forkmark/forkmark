@@ -71,7 +71,7 @@ class Config:
     DB_PATH      = Path(os.getenv("FM_DB_PATH",
                                    str(Path.home() / ".forkmark" / "forkmark.db")))
     DATABASE_URL   = os.getenv("FM_DATABASE_URL", "")  # postgresql://... for production
-    REDIS_URL      = os.getenv("FM_REDIS_URL", "")     # required for stateless API scaling
+    REDIS_URL      = os.getenv("FM_REDIS_URL", "")     # optional — enables Redis-backed caching
 
     # ── Server ─────────────────────────────────────────────────────────────────
     API_KEY_PREFIX = "fm_"

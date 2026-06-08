@@ -1,73 +1,43 @@
 # Forkmark — development & operations commands
 # Usage: make <target>
 
-.PHONY: help dev test migrate migrate-workspace lint docker-up docker-down
+.PHONY: help dev test lint build-frontend docker-up docker-down docker-logs health
 
 help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-18s\033[0m %s\n", $$1, $$2}'
 
 # ---------------------------------------------------------------------------
 # Development
 # ---------------------------------------------------------------------------
 
-dev: ## Start local development server
-	python run.py
+dev: ## Start the dev server with auto-reload
+	FM_ENV=dev python run.py
 
-test: ## Run test suite
+test: ## Run the backend test suite
 	python -m pytest tests/ -q
 
-lint: ## Run linter
+lint: ## Run the linter (ruff)
 	python -m ruff check .
 
-# ---------------------------------------------------------------------------
-# Database migrations (Alembic)
-# ---------------------------------------------------------------------------
-
-migrate: ## Run control plane migrations (public schema)
-	cd migrations && alembic upgrade head
-
-migrate-workspace: ## Run workspace schema migration (usage: make migrate-workspace SCHEMA=workspace_xxx)
-	cd migrations && alembic -x schema=$(SCHEMA) upgrade head
-
-migrate-down: ## Rollback last migration
-	cd migrations && alembic downgrade -1
-
-migrate-new: ## Create new migration (usage: make migrate-new MSG="add_foo_table")
-	cd migrations && alembic revision -m "$(MSG)"
-
-migrate-status: ## Show migration status
-	cd migrations && alembic current
+build-frontend: ## Build the React frontend into frontend/dist
+	cd frontend && npm install && npm run build
 
 # ---------------------------------------------------------------------------
-# Docker (local multi-service)
+# Docker — single-container stack (SQLite, no external services)
 # ---------------------------------------------------------------------------
 
-docker-up: ## Start all services (PostgreSQL, Redis, PgBouncer, API, Workers)
-	docker compose up -d
+docker-up: ## Start Forkmark in Docker (SQLite, http://localhost:7700)
+	docker compose -f docker-compose.simple.yml up --build -d
 
-docker-down: ## Stop all services
-	docker compose down
+docker-down: ## Stop the Docker container
+	docker compose -f docker-compose.simple.yml down
 
-docker-logs: ## Tail logs from all services
-	docker compose logs -f
-
-docker-rebuild: ## Rebuild and restart
-	docker compose up -d --build
+docker-logs: ## Tail container logs
+	docker compose -f docker-compose.simple.yml logs -f
 
 # ---------------------------------------------------------------------------
-# Production operations
+# Health
 # ---------------------------------------------------------------------------
 
-k8s-apply: ## Apply Kubernetes manifests
-	kubectl apply -f k8s/namespace.yaml
-	kubectl apply -f k8s/configmap.yaml
-	kubectl apply -f k8s/api-deployment.yaml
-	kubectl apply -f k8s/worker-deployment.yaml
-	kubectl apply -f k8s/ingress.yaml
-
-k8s-status: ## Show deployment status
-	kubectl -n forkmark get pods,svc,hpa
-
-health: ## Check API health
-	curl -s http://localhost:8000/healthz | python -m json.tool
-	curl -s http://localhost:8000/readyz | python -m json.tool
+health: ## Check the running server's health
+	curl -s http://localhost:7700/api/health

@@ -175,4 +175,4 @@ Forkmark runs as a single Python process serving both the API and the SPA static
                     └───────────┘
 ```
 
-The application uses `start.py` as the entry point, which handles building the frontend (if needed), running migrations, and launching uvicorn. See the [deployment guide](deployment/self-hosted.md) for production configuration details.
+The application entry point is `run.py`, which launches the FastAPI app with uvicorn. The React frontend ships pre-built in `frontend/dist` (served as static files), and the database schema is created automatically on first start, so no build or migration step is required to run it. See the [deployment guide](deployment/self-hosted.md) for production configuration details.

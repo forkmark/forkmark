@@ -35,6 +35,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Truthful edition messaging** — the Platform Status card no longer advertises
   enterprise features that aren't bundled in the OSS build; sidebar version string
   corrected to v0.1.2.
+- **Single entry point** — standardized on `python run.py` everywhere (README, docs,
+  platform guide). Trimmed the Makefile to targets that actually work in this repo
+  (dev, test, lint, build-frontend, docker-up/down/logs, health) and removed targets
+  that referenced files not shipped here (Alembic `migrations/`, `k8s/`, a production
+  `docker-compose.yml`).
+- **Version strings** — bumped frontend package, lockfile, and SDK to 0.1.2.
+- Moved the Platform Guide into `docs/platform-guide.md`.
 
 ### Removed
 
@@ -45,9 +52,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   multi-tenant service. Forkmark now supports SQLite (default) and PostgreSQL
   (production) — the standard, horizontally-scalable path. Settings shows a
   read-only storage indicator instead of a backend picker.
+- **Redundant launcher scripts** — `start.py/.sh/.bat`, `stop.py/.sh/.bat`,
+  `run.bat`, and `run_demos.bat`; `python run.py` (or the Docker compose file) is the
+  single supported way to start the server.
+- **Internal planning docs** — `docs/ux_improvement_tasks.md`,
+  `docs/provider_registry_tasks.md`, and `docs/show_hn_draft.md` (working notes that
+  don't belong in the public repo).
+- **`celery` dependency** — the worker path was never wired up
+  (`core/celery_app.py` did not exist), so it's removed; background scoring runs
+  in-process (see Fixed).
 
 ### Fixed
 
+- **Crash when `FM_REDIS_URL` was set** — the SDK scoring endpoint did
+  `from core.celery_app import run_scoring_task` whenever Redis was configured, but
+  that module doesn't exist, so enabling Redis crashed the scoring path with an
+  `ImportError`. Scoring now always runs via the in-process background task; Redis,
+  if configured, is used only for caching.
 - **Provider form did nothing on "Add Provider"** — the submit button was silently
   disabled when the (required) Name field was empty. Name now has a visible required
   marker and inline validation instead of a dead button.

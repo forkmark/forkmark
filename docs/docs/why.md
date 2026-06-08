@@ -80,7 +80,7 @@ Forkmark is not a model hosting platform. It calls your existing LLM endpoints a
 ```bash
 git clone https://github.com/forkmark/forkmark.git
 cd forkmark
-python start.py
+python run.py
 ```
 
 Open `http://localhost:7700`, try the Demo Gallery, and run your first evaluation in under five minutes. See the [quickstart guide](getting-started/quickstart.md) for a full walkthrough.

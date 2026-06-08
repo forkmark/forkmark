@@ -5,11 +5,10 @@ version: "3.9"
 # No TLS, no PostgreSQL, no nginx required.
 # Uses SQLite (data persisted in the "forkmark_data" volume).
 #
-# Start:  run.bat          (Windows)
-#         docker compose -f docker-compose.simple.yml up --build -d
+# Start:  docker compose -f docker-compose.simple.yml up --build -d
+#         (or run directly without Docker: python run.py)
 #
-# Stop:   stop.bat         (Windows)
-#         docker compose -f docker-compose.simple.yml down
+# Stop:   docker compose -f docker-compose.simple.yml down
 #
 # Open http://localhost:7700 in your browser.
 #
